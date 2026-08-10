@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Database, UserCheck, Sparkles, MapPin, Sun, Moon, Send } from 'lucide-react';
+import { Database, UserCheck, Sparkles, MapPin, Sun, Moon, Send } from 'lucide-react';
 
 export default function Navbar({
   roommates,
@@ -34,19 +34,19 @@ export default function Navbar({
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         
         {/* Brand Logo & Title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #6366f1, #06b6d4)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 0 15px rgba(99, 102, 241, 0.4)'
-          }}>
-            <Home size={24} color="#ffffff" />
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <img
+            src="/homesync_logo.jpg"
+            alt="HomeSync Logo"
+            style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '12px',
+              objectFit: 'cover',
+              boxShadow: '0 0 15px rgba(6, 182, 212, 0.35)',
+              border: '1px solid var(--border-glass)'
+            }}
+          />
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <h1 style={{ fontSize: '1.4rem', fontWeight: 800, background: 'linear-gradient(90deg, #6366f1, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
