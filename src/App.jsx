@@ -280,10 +280,51 @@ export default function App() {
     setBills((prev) => [item, ...prev]);
     handleShowToast({ type: 'success', message: 'Bill added successfully!' });
   };
+
+  // Bill Payment Handler with Automatic Monthly Renewal & Rollover
   const handleToggleBillPaid = (id, isPaid) => {
-    setBills((prev) => prev.map((b) => (b.id === id ? { ...b, is_paid: isPaid, status: isPaid ? 'Paid by Parents' : 'Due' } : b)));
-    handleShowToast({ type: 'success', message: isPaid ? 'Bill marked as Paid!' : 'Bill marked as Unpaid.' });
+    setBills((prev) => {
+      return prev.map((bill) => {
+        if (bill.id !== id) return bill;
+
+        if (isPaid && bill.is_recurring) {
+          // Advance due date by +1 month for next cycle
+          const currentDueDate = new Date(bill.due_date);
+          currentDueDate.setMonth(currentDueDate.getMonth() + 1);
+          const nextDueDateStr = currentDueDate.toISOString().slice(0, 10);
+
+          // Variable electricity bill amount update
+          let nextAmount = bill.amount;
+          if (bill.title.toLowerCase().includes('electricity')) {
+            const inputAmt = window.prompt(`Enter electricity bill amount for next month (${CURRENCY_SYMBOL}):`, bill.amount);
+            if (inputAmt !== null && !isNaN(parseFloat(inputAmt))) {
+              nextAmount = parseFloat(inputAmt);
+            }
+          }
+
+          return {
+            ...bill,
+            amount: nextAmount,
+            is_paid: false, // Reset for next cycle
+            status: 'Due',
+            due_date: nextDueDateStr
+          };
+        } else {
+          return {
+            ...bill,
+            is_paid: isPaid,
+            status: isPaid ? 'Paid by Parents' : (new Date(bill.due_date) < new Date() ? 'Overdue' : 'Due')
+          };
+        }
+      });
+    });
+
+    handleShowToast({
+      type: 'success',
+      message: isPaid ? 'Bill paid! Cycle renewed for next month.' : 'Bill marked as Unpaid.'
+    });
   };
+
   const handleDeleteBill = (id) => {
     setBills((prev) => prev.filter((b) => b.id !== id));
   };
@@ -458,7 +499,7 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      {/* Desktop Web Main Tab Navigation Bar (Hidden on Mobile & Tablet < 768px) */}
+      {/* Desktop Web Main Tab Navigation Bar */}
       <div className="glass-card desktop-tab-nav" style={{ padding: '0.5rem', marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
         <button
           className={`btn ${activeTab === 'overview' ? 'btn-primary' : 'btn-secondary'}`}
