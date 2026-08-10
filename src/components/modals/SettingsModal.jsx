@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Settings, Key, Database, Send, Check, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { getSupabaseCredentials, saveSupabaseCredentials } from '../../lib/supabase';
 import { getTelegramCredentials, saveTelegramCredentials, sendTelegramMessage } from '../../lib/telegram';
@@ -23,7 +23,7 @@ export default function SettingsModal({
   const [teleChatId, setTeleChatId] = useState(initialTele.chatId);
   const [testingTele, setTestingTele] = useState(false);
 
-  // PIN state (Auto-submits on typing 4th digit of new PIN)
+  // PIN state (Explicit button submit)
   const [currentPin, setCurrentPin] = useState('');
   const [newPin, setNewPin] = useState('');
   const [pinError, setPinError] = useState('');
@@ -33,29 +33,26 @@ export default function SettingsModal({
 
   const isAdminAndre = activeRoommate?.id === 'r1' || activeRoommate?.name === 'Andre';
 
-  // Handle New PIN Input & Auto-Submit
-  const handleNewPinChange = (val) => {
-    // Only allow numbers, max 4 digits
-    const cleaned = val.replace(/\D/g, '').slice(0, 4);
-    setNewPin(cleaned);
+  const handleUpdatePinSubmit = (e) => {
+    e.preventDefault();
     setPinError('');
     setPinSuccess('');
 
-    if (cleaned.length === 4) {
-      if (currentPin !== activeRoommate.pin) {
-        setPinError('Incorrect current PIN. Please try again.');
-        setCurrentPin('');
-        setNewPin('');
-        return;
-      }
-
-      // Valid PIN - Auto Submit!
-      onUpdatePin(activeRoommate.id, cleaned);
-      setPinSuccess('🔑 Security PIN updated successfully!');
-      setCurrentPin('');
-      setNewPin('');
-      if (onShowToast) onShowToast({ type: 'success', message: 'Security PIN updated successfully!' });
+    if (currentPin !== activeRoommate.pin) {
+      setPinError('Incorrect current PIN. Please try again.');
+      return;
     }
+
+    if (newPin.length < 4) {
+      setPinError('New PIN must be 4 digits.');
+      return;
+    }
+
+    onUpdatePin(activeRoommate.id, newPin);
+    setPinSuccess('🔑 Security PIN updated successfully!');
+    setCurrentPin('');
+    setNewPin('');
+    if (onShowToast) onShowToast({ type: 'success', message: 'Security PIN updated successfully!' });
   };
 
   const handleSaveSupabase = (e) => {
@@ -110,13 +107,13 @@ export default function SettingsModal({
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
-          {/* SECTION 1: Change Security PIN (Available for both roommates) */}
+          {/* SECTION 1: Change Security PIN (Has explicit Update PIN button) */}
           <div className="sub-card" style={{ padding: '1.25rem' }}>
             <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-main)' }}>
               <Key size={18} color="var(--status-warning)" /> Change Security PIN ({activeRoommate?.name})
             </h3>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-              Type your old 4-digit PIN first. The new PIN will <strong>auto-submit</strong> immediately upon typing the 4th digit!
+              Enter your current 4-digit PIN and choose a new PIN.
             </p>
 
             {pinError && (
@@ -131,36 +128,43 @@ export default function SettingsModal({
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, marginBottom: '0.3rem' }}>
-                  Current PIN (4 digits)
-                </label>
-                <input
-                  type="password"
-                  maxLength={4}
-                  className="glass-input"
-                  placeholder="••••"
-                  value={currentPin}
-                  onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                />
+            <form onSubmit={handleUpdatePinSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+                    Current PIN
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={4}
+                    className="glass-input"
+                    placeholder="••••"
+                    value={currentPin}
+                    onChange={(e) => setCurrentPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+                    New PIN
+                  </label>
+                  <input
+                    type="password"
+                    maxLength={4}
+                    className="glass-input"
+                    placeholder="••••"
+                    value={newPin}
+                    onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    required
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, marginBottom: '0.3rem' }}>
-                  New PIN (Auto-submits)
-                </label>
-                <input
-                  type="password"
-                  maxLength={4}
-                  disabled={currentPin.length < 4}
-                  className="glass-input"
-                  placeholder={currentPin.length < 4 ? 'Enter old PIN first' : '••••'}
-                  value={newPin}
-                  onChange={(e) => handleNewPinChange(e.target.value)}
-                />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.25rem' }}>
+                <button type="submit" className="btn btn-primary btn-sm"><Check size={14} /> Update Security PIN</button>
               </div>
-            </div>
+            </form>
           </div>
 
           {/* ADMIN ONLY SECTIONS (Andre) */}
