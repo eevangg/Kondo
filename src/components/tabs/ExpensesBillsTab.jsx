@@ -83,22 +83,25 @@ export default function ExpensesBillsTab({
       </div>
 
       {/* Sub Tab Switching Controls */}
-      <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem', overflowX: 'auto' }}>
         <button
           className={`btn btn-sm ${subTab === 'expenses' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setSubTab('expenses')}
+          style={{ whiteSpace: 'nowrap' }}
         >
           <Receipt size={14} /> Shared Expenses ({expenses.length})
         </button>
         <button
           className={`btn btn-sm ${subTab === 'bills' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setSubTab('bills')}
+          style={{ whiteSpace: 'nowrap' }}
         >
           <Calendar size={14} /> Recurring & Utility Bills ({bills.length})
         </button>
         <button
           className={`btn btn-sm ${subTab === 'settlements' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setSubTab('settlements')}
+          style={{ whiteSpace: 'nowrap' }}
         >
           <CheckCircle2 size={14} /> Settlement Log ({settlements.length})
         </button>
@@ -120,8 +123,8 @@ export default function ExpensesBillsTab({
               <p>No shared expenses logged yet.</p>
             </div>
           ) : (
-            <div className="glass-card" style={{ padding: '1rem' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+            <div className="glass-card" style={{ padding: '0.75rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', minWidth: '550px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border-glass)', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                     <th style={{ padding: '0.75rem' }}>Date</th>
@@ -139,17 +142,17 @@ export default function ExpensesBillsTab({
 
                     return (
                       <tr key={exp.id} style={{ borderBottom: '1px solid var(--border-glass)' }}>
-                        <td style={{ padding: '0.75rem', color: 'var(--text-muted)' }}>{exp.expense_date}</td>
-                        <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--text-main)' }}>{exp.description}</td>
-                        <td style={{ padding: '0.75rem' }}>
+                        <td style={{ padding: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{exp.expense_date}</td>
+                        <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--text-main)', minWidth: '140px' }}>{exp.description}</td>
+                        <td style={{ padding: '0.75rem', whiteSpace: 'nowrap' }}>
                           <span className={`badge ${isFullOwed ? 'badge-warning' : 'badge-purple'}`}>
                             {isFullOwed ? '100% Owed' : '50/50 Split'}
                           </span>
                         </td>
-                        <td style={{ padding: '0.75rem', fontWeight: 600, color: payer.avatar_color }}>
+                        <td style={{ padding: '0.75rem', fontWeight: 600, color: payer.avatar_color, whiteSpace: 'nowrap' }}>
                           {payer.name}
                         </td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 800, color: 'var(--text-main)' }}>
+                        <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 800, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
                           {CURRENCY_SYMBOL}{Number(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </td>
                         <td style={{ padding: '0.75rem', textAlign: 'right' }}>

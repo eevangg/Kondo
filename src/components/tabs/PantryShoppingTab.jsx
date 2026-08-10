@@ -14,26 +14,25 @@ export default function PantryShoppingTab({
   const [activeView, setActiveView] = useState('pantry');
 
   const lowOrOutCount = pantryItems.filter((i) => i.stock_level === 'Low' || i.stock_level === 'Out').length;
-  const pendingShoppingCount = shoppingItems.filter((i) => !i.is_completed).length;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
       {/* Top Banner Controls */}
       <div className="glass-card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
           <button
             className={`btn ${activeView === 'pantry' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setActiveView('pantry')}
           >
-            <ShoppingBag size={16} /> Kitchen Pantry ({pantryItems.length})
+            <ShoppingBag size={16} /> Kitchen Pantry
             {lowOrOutCount > 0 && <span className="badge badge-warning" style={{ marginLeft: '0.3rem' }}>{lowOrOutCount} Low</span>}
           </button>
           <button
             className={`btn ${activeView === 'shopping' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setActiveView('shopping')}
           >
-            Shared Shopping List ({pendingShoppingCount})
+            Shared Shopping List
           </button>
         </div>
 
@@ -66,9 +65,9 @@ export default function PantryShoppingTab({
                 </div>
               )}
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.75rem', borderTop: '1px solid var(--border-glass)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-glass)' }}>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Stock Level:</span>
-                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
                   {['Full', 'Medium', 'Low', 'Out'].map((level) => {
                     const isActive = item.stock_level === level;
                     let badgeClass = 'btn-secondary';
@@ -118,39 +117,42 @@ export default function PantryShoppingTab({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '0.75rem',
                       opacity: s.is_completed ? 0.6 : 1
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flex: '1 1 180px', minWidth: 0 }}>
                       <input
                         type="checkbox"
                         checked={s.is_completed}
                         onChange={() => onToggleShoppingCompleted(s.id)}
-                        style={{ width: 18, height: 18, cursor: 'pointer' }}
+                        style={{ width: 18, height: 18, cursor: 'pointer', flexShrink: 0 }}
                       />
-                      <div>
-                        <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: s.is_completed ? 'line-through' : 'none' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', minWidth: 0 }}>
+                        <span style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: s.is_completed ? 'line-through' : 'none', wordBreak: 'break-word' }}>
                           {s.name}
                         </span>
-                        <span className="badge badge-purple" style={{ marginLeft: '0.5rem', fontSize: '0.7rem' }}>
+                        <span className="badge badge-purple" style={{ width: 'fit-content', fontSize: '0.7rem' }}>
                           {s.category}
                         </span>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
                       {s.pantry_item_id && (
                         <button
                           onClick={() => onRestockFromShopping(s)}
                           className="btn btn-primary btn-sm"
-                          style={{ fontSize: '0.75rem', gap: '0.3rem' }}
+                          style={{ fontSize: '0.75rem', gap: '0.3rem', padding: '0.3rem 0.6rem' }}
                         >
-                          <RefreshCw size={12} /> Restock to Pantry
+                          <RefreshCw size={12} /> Restock
                         </button>
                       )}
                       <button
                         onClick={() => onDeleteShoppingItem(s.id)}
-                        style={{ background: 'none', border: 'none', color: 'var(--status-danger)', cursor: 'pointer' }}
+                        style={{ background: 'none', border: 'none', color: 'var(--status-danger)', cursor: 'pointer', padding: '0.3rem' }}
+                        title="Delete Item"
                       >
                         <Trash2 size={16} />
                       </button>
