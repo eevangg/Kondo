@@ -25,6 +25,9 @@ export default function Navbar({
     });
   }
 
+  // Only Andre (r1) sees the Supabase Database configuration button
+  const isAdminAndre = activeRoommateId === 'r1' || activeRoommate.name === 'Andre';
+
   return (
     <header className="glass-card" style={{ borderRadius: '0 0 20px 20px', padding: '1rem 1.5rem', marginBottom: '1.5rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
@@ -87,28 +90,30 @@ export default function Navbar({
             {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#6366f1" />}
           </button>
 
-          {/* Supabase Status Pill */}
-          <button
-            onClick={onOpenConfigModal}
-            className="btn btn-secondary btn-sm"
-            title="Configure Supabase Database"
-            style={{ fontSize: '0.8rem', gap: '0.4rem' }}
-          >
-            <Database size={15} color={isSupabaseConnected ? '#10b981' : '#f59e0b'} />
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              {isSupabaseConnected ? (
-                <>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
-                  Supabase Live
-                </>
-              ) : (
-                <>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }} />
-                  Configure Supabase
-                </>
-              )}
-            </span>
-          </button>
+          {/* Supabase Status Pill - Admin Only (Andre) */}
+          {isAdminAndre && (
+            <button
+              onClick={onOpenConfigModal}
+              className="btn btn-secondary btn-sm"
+              title="Configure Supabase Database"
+              style={{ fontSize: '0.8rem', gap: '0.4rem' }}
+            >
+              <Database size={15} color={isSupabaseConnected ? '#10b981' : '#f59e0b'} />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                {isSupabaseConnected ? (
+                  <>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
+                    Supabase Live
+                  </>
+                ) : (
+                  <>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }} />
+                    Configure Supabase
+                  </>
+                )}
+              </span>
+            </button>
+          )}
 
           {/* Active Roommate Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-glass-strong)', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-glass)' }}>
