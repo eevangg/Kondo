@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { X, Calendar as CalendarIcon, Check } from 'lucide-react';
+import { X, Calendar as CalendarIcon, Check, Bell } from 'lucide-react';
 
 export default function AddEventModal({ isOpen, onClose, activeRoommateId, onAddEvent }) {
   const [title, setTitle] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [category, setCategory] = useState('Maintenance');
+  const [reminderTiming, setReminderTiming] = useState('1 day before');
   const [notes, setNotes] = useState('');
 
   if (!isOpen) return null;
@@ -17,12 +18,14 @@ export default function AddEventModal({ isOpen, onClose, activeRoommateId, onAdd
       title,
       event_date: eventDate,
       category,
+      reminder_timing: reminderTiming,
       notes,
       added_by: activeRoommateId
     });
 
     setTitle('');
     setEventDate('');
+    setReminderTiming('1 day before');
     setNotes('');
     onClose();
   };
@@ -75,6 +78,18 @@ export default function AddEventModal({ isOpen, onClose, activeRoommateId, onAdd
                 <option value="General">General Event</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+              <Bell size={14} color="var(--accent-secondary)" /> Telegram Bot Reminder Timing
+            </label>
+            <select className="glass-input" value={reminderTiming} onChange={(e) => setReminderTiming(e.target.value)}>
+              <option value="Immediate">Instant Alert (Notify on create)</option>
+              <option value="1 hour before">1 Hour Before Event</option>
+              <option value="1 day before">1 Day Before Event</option>
+              <option value="Morning of event (8:00 AM)">Morning of Event (8:00 AM)</option>
+            </select>
           </div>
 
           <div>

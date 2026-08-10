@@ -48,26 +48,18 @@ export default function App() {
   const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
 
-  // In-App Toast State (Zero browser alert() popups!)
+  // In-App Toast State
   const [toast, setToast] = useState(null);
-
-  const handleShowToast = (toastObj) => {
-    setToast(toastObj);
-  };
+  const handleShowToast = (toastObj) => setToast(toastObj);
 
   // Light / Dark Theme State
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('homesync_theme') || 'dark';
-  });
-
+  const [theme, setTheme] = useState(() => localStorage.getItem('homesync_theme') || 'dark');
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('homesync_theme', theme);
   }, [theme]);
 
-  const handleToggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  const handleToggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
 
   // Security PIN Modal State
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
@@ -145,7 +137,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem('homesync_cleaning', JSON.stringify(cleaningTasks)); }, [cleaningTasks]);
   useEffect(() => { localStorage.setItem('homesync_maintenance', JSON.stringify(maintenanceIssues)); }, [maintenanceIssues]);
 
-  // Automatic Presence Timer
+  // Automatic Presence Timer: Auto-reverts 'Away' to 'At Condo' when scheduled return_time passes
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
@@ -171,7 +163,39 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Presence Save Handler
+  // Background Pantry Expiration Reminder Checker (Trigger #4)
+  useEffect(() => {
+    const checkPantryExpirations = async () => {
+      const today = new Date();
+      const notifiedKey = 'homesync_notified_expirations';
+      const notified = JSON.parse(localStorage.getItem(notifiedKey) || '{}');
+
+      for (const item of pantryItems) {
+        if (item.expiration_date) {
+          const expDate = new Date(item.expiration_date);
+          const diffTime = expDate - today;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          const reminderDays = item.reminder_days_before || 1;
+
+          if (diffDays <= reminderDays && diffDays >= 0) {
+            const itemKey = `${item.id}_${item.expiration_date}`;
+            if (!notified[itemKey]) {
+              // Trigger #4: Pantry Expiration Alert
+              const dateFormatted = expDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+              const msg = `⚠️ Pantry Alert: ${item.name} is expiring on ${dateFormatted}!`;
+              await sendTelegramMessage(msg);
+              notified[itemKey] = true;
+              localStorage.setItem(notifiedKey, JSON.stringify(notified));
+            }
+          }
+        }
+      }
+    };
+
+    checkPantryExpirations();
+  }, [pantryItems]);
+
+  // Presence Save Handler (Trigger #2)
   const handleSavePresence = (roommateId, newPresence) => {
     setPresenceState((prev) => ({
       ...prev,
@@ -179,11 +203,23 @@ export default function App() {
     }));
   };
 
-  // Events Handlers
-  const handleAddEvent = (newEvent) => {
+  // Trigger #3: Scheduled Event Handler
+  const handleAddEvent = async (newEvent) => {
     const item = { ...newEvent, id: 'ev_' + Date.now() };
     setEvents((prev) => [item, ...prev]);
     handleShowToast({ type: 'success', message: 'Household event scheduled!' });
+
+    // Trigger #3: Send simplified event notification
+    const dateFormatted = new Date(newEvent.event_date).toLocaleString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const msg = `📅 Scheduled: ${newEvent.title} on ${dateFormatted}`;
+    await sendTelegramMessage(msg);
   };
 
   const handleDeleteEvent = (id) => {
@@ -226,25 +262,25 @@ export default function App() {
     setBills((prev) => prev.filter((b) => b.id !== id));
   };
 
-  // Expense Log Handler with Automated Instant Telegram Alert
+  // Trigger #1: Simplified Expense Log Handler (Only tags the person who owes money!)
   const handleAddExpense = async (newExp) => {
     const item = { ...newExp, id: 'e_' + Date.now() };
     setExpenses((prev) => [item, ...prev]);
 
-    // Send instant Telegram notification
-    const payer = roommates.find((r) => r.id === newExp.paid_by) || { name: 'Roommate' };
-    const isFullOwed = newExp.split_type === 'full';
-    
-    let text = `💸 *HOMESYNC NEW EXPENSE LOGGED*\n`;
-    text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
-    text += `📌 *Description*: ${newExp.description}\n`;
-    text += `💰 *Total Cost*: ${CURRENCY_SYMBOL}${Number(newExp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}\n`;
-    text += `🏷️ *Category*: ${newExp.category}\n`;
-    text += `👤 *Paid By*: ${payer.name}\n`;
-    text += `📊 *Split Type*: ${isFullOwed ? `100% Owed to ${payer.name}` : 'Equal 50/50 Split'}\n`;
-    text += `📅 *Date*: ${newExp.expense_date}\n`;
+    const payer = roommates.find((r) => r.id === newExp.paid_by) || roommates[0];
+    const ower = roommates.find((r) => r.id !== newExp.paid_by) || roommates[1];
 
-    const result = await sendTelegramMessage(text);
+    const amt = Number(newExp.amount) || 0;
+    const owedAmount = newExp.split_type === 'full' ? amt : amt / 2;
+
+    // RULE: Only tag the person who owes money! Do NOT tag the payer.
+    const owerTag = ower.telegram_handle || ower.name;
+    const payerName = payer.name;
+
+    const formattedAmount = owedAmount.toLocaleString('en-US', { minimumFractionDigits: 2 });
+    const msg = `💸 ${owerTag} owes ${payerName} ${CURRENCY_SYMBOL}${formattedAmount} for ${newExp.description}`;
+
+    const result = await sendTelegramMessage(msg);
     if (result.success) {
       handleShowToast({ type: 'success', message: 'Expense logged & sent to Telegram!' });
     } else {
@@ -256,27 +292,11 @@ export default function App() {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   };
 
-  // Settle Up Handler with Automated Telegram Alert
-  const handleSettleUp = async (newSettlement) => {
+  // Settle Up Handler
+  const handleSettleUp = (newSettlement) => {
     const item = { ...newSettlement, id: 's_' + Date.now(), settled_at: new Date().toISOString() };
     setSettlements((prev) => [item, ...prev]);
-
-    const payer = roommates.find((r) => r.id === newSettlement.payer_id) || { name: 'Payer' };
-    const payee = roommates.find((r) => r.id === newSettlement.payee_id) || { name: 'Payee' };
-
-    let text = `🤝 *HOMESYNC BALANCE SETTLED*\n`;
-    text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
-    text += `👤 *Payer*: ${payer.name}\n`;
-    text += `👤 *Payee*: ${payee.name}\n`;
-    text += `💰 *Amount Settled*: ${CURRENCY_SYMBOL}${Number(newSettlement.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}\n`;
-    if (newSettlement.note) text += `📝 *Note*: ${newSettlement.note}\n`;
-
-    const result = await sendTelegramMessage(text);
-    if (result.success) {
-      handleShowToast({ type: 'success', message: 'Settlement recorded & sent to Telegram!' });
-    } else {
-      handleShowToast({ type: 'success', message: 'Settlement recorded!' });
-    }
+    handleShowToast({ type: 'success', message: 'Settlement recorded!' });
   };
 
   const handleAddPantryItem = (newItem) => {
@@ -354,7 +374,7 @@ export default function App() {
         return task;
       })
     );
-    handleShowToast({ type: 'success', message: 'Chore marked as Cleaned! Streak updated.' });
+    handleShowToast({ type: 'success', message: 'Chore marked as Cleaned!' });
   };
 
   const handleDeleteCleaningTask = (id) => {

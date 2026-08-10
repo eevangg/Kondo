@@ -1,8 +1,8 @@
 export const CURRENCY_SYMBOL = '₱';
 
 export const INITIAL_ROOMMATES = [
-  { id: 'r1', name: 'Andre', avatar_color: '#6366f1', initials: 'AN', pin: '1234' },
-  { id: 'r2', name: 'Gerard', avatar_color: '#06b6d4', initials: 'GR', pin: '5678' }
+  { id: 'r1', name: 'Andre', avatar_color: '#6366f1', initials: 'AN', pin: '1234', telegram_handle: '@eevangg' },
+  { id: 'r2', name: 'Gerard', avatar_color: '#06b6d4', initials: 'GR', pin: '5678', telegram_handle: '@gerardmolinaa' }
 ];
 
 export const INITIAL_EVENTS = [
@@ -11,6 +11,7 @@ export const INITIAL_EVENTS = [
     title: 'Condo Maintenance Visit',
     event_date: '2026-08-12T09:00',
     category: 'Maintenance',
+    reminder_timing: '1 day before',
     added_by: 'r1',
     notes: 'Technician checking kitchen faucet drip'
   },
@@ -19,6 +20,7 @@ export const INITIAL_EVENTS = [
     title: 'Professional Unit Cleaning',
     event_date: '2026-09-01T12:00',
     category: 'Cleaning',
+    reminder_timing: 'Morning of event (8:00 AM)',
     added_by: 'r1',
     notes: 'Full deep clean session'
   }
@@ -116,6 +118,7 @@ export const INITIAL_PANTRY = [
     category: 'Household Essentials',
     stock_level: 'Low',
     expiration_date: null,
+    reminder_days_before: 1,
     auto_add_shopping: true
   },
   {
@@ -124,6 +127,7 @@ export const INITIAL_PANTRY = [
     category: 'Fridge',
     stock_level: 'Medium',
     expiration_date: '2026-08-18',
+    reminder_days_before: 1,
     auto_add_shopping: true
   },
   {
@@ -132,6 +136,7 @@ export const INITIAL_PANTRY = [
     category: 'Freezer',
     stock_level: 'Full',
     expiration_date: '2026-09-30',
+    reminder_days_before: 3,
     auto_add_shopping: true
   },
   {
@@ -140,6 +145,7 @@ export const INITIAL_PANTRY = [
     category: 'Dry Goods',
     stock_level: 'Full',
     expiration_date: null,
+    reminder_days_before: 1,
     auto_add_shopping: true
   }
 ];
