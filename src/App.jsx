@@ -18,7 +18,6 @@ import AddCleaningTaskModal from './components/modals/AddCleaningTaskModal';
 import AddMaintenanceModal from './components/modals/AddMaintenanceModal';
 import SettleUpModal from './components/modals/SettleUpModal';
 import ParentBillExportModal from './components/modals/ParentBillExportModal';
-import PinSecurityModal from './components/modals/PinSecurityModal';
 import PresenceModal from './components/modals/PresenceModal';
 import AddEventModal from './components/modals/AddEventModal';
 import SettingsModal from './components/modals/SettingsModal';
@@ -40,6 +39,28 @@ import { sendTelegramMessage } from './lib/telegram';
 import { LayoutDashboard, Receipt, ShoppingBag, Sparkles, Wrench, Calendar as CalendarIcon } from 'lucide-react';
 
 export default function App() {
+  // Roommates State with Automatic 6-Digit Migration
+  const [roommates, setRoommates] = useState(() => {
+    const saved = localStorage.getItem('homesync_roommates');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Force upgrade all PINs to 6 digits if old 4-digit PINs exist in localStorage
+        return parsed.map((r) => ({
+          ...r,
+          pin: (r.pin && String(r.pin).length === 6) ? String(r.pin) : (r.id === 'r1' ? '123456' : '567890')
+        }));
+      } catch (e) {
+        return INITIAL_ROOMMATES;
+      }
+    }
+    return INITIAL_ROOMMATES;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('homesync_roommates', JSON.stringify(roommates));
+  }, [roommates]);
+
   // Authentication & Session Persistence State
   const [authRoommateId, setAuthRoommateId] = useState(() => {
     return localStorage.getItem('homesync_auth_user') || sessionStorage.getItem('homesync_auth_user') || null;
@@ -49,16 +70,6 @@ export default function App() {
   const [activeRoommateId, setActiveRoommateId] = useState(() => authRoommateId || 'r1');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
-
-  // Roommates State with LocalStorage Persistence
-  const [roommates, setRoommates] = useState(() => {
-    const saved = localStorage.getItem('homesync_roommates');
-    return saved ? JSON.parse(saved) : INITIAL_ROOMMATES;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('homesync_roommates', JSON.stringify(roommates));
-  }, [roommates]);
 
   // Login Success Handler (Handles Remember Me)
   const handleLoginSuccess = (roommateId, stayLoggedIn) => {
@@ -77,7 +88,7 @@ export default function App() {
     handleShowToast({ type: 'success', message: `Welcome back, ${rm ? rm.name : 'Roommate'}!` });
   };
 
-  // Logout Handler
+  // Logout Handler (Mandatory to switch profiles)
   const handleLogout = () => {
     setAuthRoommateId(null);
     localStorage.removeItem('homesync_auth_user');
@@ -97,10 +108,6 @@ export default function App() {
   }, [theme]);
 
   const handleToggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-
-  // Security PIN Modal State
-  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-  const [pendingRoommateId, setPendingRoommateId] = useState(null);
 
   // Presence Modal State
   const [isPresenceModalOpen, setIsPresenceModalOpen] = useState(false);
@@ -242,7 +249,7 @@ export default function App() {
   // PIN Update Handler
   const handleUpdatePin = (roommateId, newPin) => {
     setRoommates((prev) =>
-      prev.map((r) => (r.id === roommateId ? { ...r, pin: newPin } : r))
+      prev.map((r) => (r.id === roommateId ? { ...r, pin: String(newPin) } : r))
     );
   };
 
@@ -266,19 +273,6 @@ export default function App() {
 
   const handleDeleteEvent = (id) => {
     setEvents((prev) => prev.filter((ev) => ev.id !== id));
-  };
-
-  // Handle Roommate Switch with PIN Prompt
-  const handleRequestRoommateSwitch = (newId) => {
-    setPendingRoommateId(newId);
-    setIsPinModalOpen(true);
-  };
-
-  const handleConfirmRoommateSwitch = () => {
-    if (pendingRoommateId) {
-      setActiveRoommateId(pendingRoommateId);
-      setPendingRoommateId(null);
-    }
   };
 
   const handleAddBill = (newBill) => {
@@ -440,7 +434,6 @@ export default function App() {
       <Navbar
         roommates={roommates}
         activeRoommateId={activeRoommateId}
-        setActiveRoommateId={handleRequestRoommateSwitch}
         presenceState={presenceState}
         theme={theme}
         onToggleTheme={handleToggleTheme}
@@ -616,13 +609,6 @@ export default function App() {
         expenses={expenses}
         roommates={roommates}
         onShowToast={handleShowToast}
-      />
-
-      <PinSecurityModal
-        isOpen={isPinModalOpen}
-        onClose={() => setIsPinModalOpen(false)}
-        targetRoommate={roommates.find((r) => r.id === pendingRoommateId)}
-        onSuccess={handleConfirmRoommateSwitch}
       />
 
       <AddExpenseModal

@@ -4,7 +4,6 @@ import { Home, UserCheck, Sparkles, MapPin, Sun, Moon, Settings, LogOut } from '
 export default function Navbar({
   roommates,
   activeRoommateId,
-  setActiveRoommateId,
   presenceState,
   theme,
   onToggleTheme,
@@ -87,7 +86,7 @@ export default function Navbar({
             {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#6366f1" />}
           </button>
 
-          {/* Settings Button */}
+          {/* Security Settings Button */}
           <button
             onClick={onOpenSettingsModal}
             className="btn btn-secondary btn-sm"
@@ -97,39 +96,33 @@ export default function Navbar({
             <Settings size={18} color="var(--accent-primary)" />
           </button>
 
-          {/* Active Roommate Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-glass-strong)', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-glass)' }}>
+          {/* Static Logged In Profile Badge (No inline dropdown - user must logout to switch) */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: 'var(--bg-glass-strong)',
+              padding: '0.35rem 0.85rem',
+              borderRadius: 'var(--radius-full)',
+              border: `1px solid ${activeRoommate.avatar_color}`
+            }}
+          >
             <UserCheck size={16} color={activeRoommate.avatar_color} />
-            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Logged as:</span>
-            <select
-              value={activeRoommateId}
-              onChange={(e) => setActiveRoommateId(e.target.value)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: activeRoommate.avatar_color,
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              {roommates.map((r) => (
-                <option key={r.id} value={r.id} style={{ background: 'var(--bg-surface)', color: 'var(--text-main)' }}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Logged in:</span>
+            <strong style={{ color: activeRoommate.avatar_color, fontSize: '0.9rem', fontWeight: 700 }}>
+              {activeRoommate.name}
+            </strong>
           </div>
 
           {/* Log Out Button */}
           <button
             onClick={onLogout}
             className="btn btn-secondary btn-sm"
-            style={{ padding: '0.45rem', borderRadius: '50%', width: '36px', height: '36px', color: 'var(--status-danger)' }}
+            style={{ padding: '0.45rem 0.75rem', gap: '0.35rem', borderRadius: 'var(--radius-md)', color: 'var(--status-danger)', fontSize: '0.8rem', fontWeight: 600 }}
             title="Log Out & Lock App"
           >
-            <LogOut size={18} />
+            <LogOut size={16} /> Log Out
           </button>
 
         </div>
