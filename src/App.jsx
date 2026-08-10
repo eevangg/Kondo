@@ -46,7 +46,7 @@ export default function App() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
 
-  // Database Driven States (No static mock fallbacks)
+  // Database Driven States
   const [events, setEvents] = useState([]);
   const [presenceState, setPresenceState] = useState({
     r1: { status: 'At Condo', return_time: null },
@@ -77,36 +77,50 @@ export default function App() {
 
   // Fetch All Initial Data from Supabase Database
   const fetchAllData = async () => {
-    if (!isSupabaseConnected || !supabase) return;
+    if (!isSupabaseConnected || !supabase) {
+      console.warn('HomeSync: Supabase is not connected. Check Vercel environment variables.');
+      return;
+    }
+
     try {
-      const { data: rmData } = await supabase.from('roommates').select('*');
+      const { data: rmData, error: rmErr } = await supabase.from('roommates').select('*');
+      if (rmErr) console.error('Supabase fetch error (roommates):', rmErr);
       if (rmData && rmData.length > 0) setRoommates(rmData);
 
-      const { data: bData } = await supabase.from('bills').select('*').order('created_at', { ascending: false });
+      const { data: bData, error: bErr } = await supabase.from('bills').select('*').order('created_at', { ascending: false });
+      if (bErr) console.error('Supabase fetch error (bills):', bErr);
       if (bData) setBills(bData);
 
-      const { data: eData } = await supabase.from('expenses').select('*').order('created_at', { ascending: false });
+      const { data: eData, error: eErr } = await supabase.from('expenses').select('*').order('created_at', { ascending: false });
+      if (eErr) console.error('Supabase fetch error (expenses):', eErr);
       if (eData) setExpenses(eData);
 
-      const { data: sData } = await supabase.from('settlements').select('*').order('settled_at', { ascending: false });
+      const { data: sData, error: sErr } = await supabase.from('settlements').select('*').order('settled_at', { ascending: false });
+      if (sErr) console.error('Supabase fetch error (settlements):', sErr);
       if (sData) setSettlements(sData);
 
-      const { data: evData } = await supabase.from('events').select('*').order('event_date', { ascending: true });
+      const { data: evData, error: evErr } = await supabase.from('events').select('*').order('event_date', { ascending: true });
+      if (evErr) console.error('Supabase fetch error (events):', evErr);
       if (evData) setEvents(evData);
 
-      const { data: pData } = await supabase.from('pantry_items').select('*').order('created_at', { ascending: false });
+      const { data: pData, error: pErr } = await supabase.from('pantry_items').select('*').order('created_at', { ascending: false });
+      if (pErr) console.error('Supabase fetch error (pantry_items):', pErr);
       if (pData) setPantryItems(pData);
 
-      const { data: shopData } = await supabase.from('shopping_items').select('*').order('created_at', { ascending: false });
+      const { data: shopData, error: shopErr } = await supabase.from('shopping_items').select('*').order('created_at', { ascending: false });
+      if (shopErr) console.error('Supabase fetch error (shopping_items):', shopErr);
       if (shopData) setShoppingItems(shopData);
 
-      const { data: cData } = await supabase.from('cleaning_tasks').select('*').order('created_at', { ascending: false });
+      const { data: cData, error: cErr } = await supabase.from('cleaning_tasks').select('*').order('created_at', { ascending: false });
+      if (cErr) console.error('Supabase fetch error (cleaning_tasks):', cErr);
       if (cData) setCleaningTasks(cData);
 
-      const { data: mData } = await supabase.from('maintenance_issues').select('*').order('created_at', { ascending: false });
+      const { data: mData, error: mErr } = await supabase.from('maintenance_issues').select('*').order('created_at', { ascending: false });
+      if (mErr) console.error('Supabase fetch error (maintenance_issues):', mErr);
       if (mData) setMaintenanceIssues(mData);
 
-      const { data: presData } = await supabase.from('presence').select('*');
+      const { data: presData, error: presErr } = await supabase.from('presence').select('*');
+      if (presErr) console.error('Supabase fetch error (presence):', presErr);
       if (presData && presData.length > 0) {
         const presObj = {};
         presData.forEach((row) => {
@@ -134,7 +148,7 @@ export default function App() {
         { event: '*', schema: 'public' },
         (payload) => {
           console.log('Realtime change received:', payload);
-          fetchAllData(); // Instantly refresh state on all connected devices
+          fetchAllData();
         }
       )
       .subscribe();
@@ -297,7 +311,8 @@ export default function App() {
     setExpenses((prev) => [item, ...prev]);
 
     if (isSupabaseConnected && supabase) {
-      await supabase.from('expenses').insert(item);
+      const { error } = await supabase.from('expenses').insert(item);
+      if (error) console.error('Supabase expense insert error:', error);
     }
 
     const payer = roommates.find((r) => r.id === newExp.paid_by) || roommates[0];
@@ -333,7 +348,8 @@ export default function App() {
     setSettlements((prev) => [item, ...prev]);
 
     if (isSupabaseConnected && supabase) {
-      await supabase.from('settlements').insert(item);
+      const { error } = await supabase.from('settlements').insert(item);
+      if (error) console.error('Supabase settlement insert error:', error);
     }
 
     const payer = roommates.find((r) => r.id === newSettlement.payer_id) || roommates[0];

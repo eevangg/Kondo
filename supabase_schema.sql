@@ -1,4 +1,4 @@
--- HomeSync Supabase Schema Migration (Updated with Live Condo Data & Realtime Support)
+-- HomeSync Supabase Schema Migration (Updated with Live Condo Data & Open Access)
 -- Copy & Run this SQL in your Supabase SQL Editor (https://app.supabase.com/project/_/sql)
 
 -- 1. Roommates Table
@@ -155,48 +155,17 @@ VALUES
   ('r2', 'At Condo', NULL)
 ON CONFLICT (roommate_id) DO NOTHING;
 
--- Enable Row Level Security (RLS) & Public Policies for HomeSync
-ALTER TABLE roommates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE bills ENABLE ROW LEVEL SECURITY;
-ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE settlements ENABLE ROW LEVEL SECURITY;
-ALTER TABLE events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE pantry_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE shopping_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE cleaning_tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE maintenance_issues ENABLE ROW LEVEL SECURITY;
-ALTER TABLE presence ENABLE ROW LEVEL SECURITY;
-
--- Drop existing policies first so re-running never throws policy already exists error
-DROP POLICY IF EXISTS "Allow public read/write access to HomeSync data" ON roommates;
-CREATE POLICY "Allow public read/write access to HomeSync data" ON roommates FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public read/write access to HomeSync bills" ON bills;
-CREATE POLICY "Allow public read/write access to HomeSync bills" ON bills FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public read/write access to HomeSync expenses" ON expenses;
-CREATE POLICY "Allow public read/write access to HomeSync expenses" ON expenses FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public read/write access to HomeSync settlements" ON settlements;
-CREATE POLICY "Allow public read/write access to HomeSync settlements" ON settlements FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public read/write access to HomeSync events" ON events;
-CREATE POLICY "Allow public read/write access to HomeSync events" ON events FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public read/write access to HomeSync pantry" ON pantry_items;
-CREATE POLICY "Allow public read/write access to HomeSync pantry" ON pantry_items FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public read/write access to HomeSync shopping" ON shopping_items;
-CREATE POLICY "Allow public read/write access to HomeSync shopping" ON shopping_items FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public read/write access to HomeSync cleaning" ON cleaning_tasks;
-CREATE POLICY "Allow public read/write access to HomeSync cleaning" ON cleaning_tasks FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public read/write access to HomeSync maintenance" ON maintenance_issues;
-CREATE POLICY "Allow public read/write access to HomeSync maintenance" ON maintenance_issues FOR ALL USING (true) WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public read/write access to HomeSync presence" ON presence;
-CREATE POLICY "Allow public read/write access to HomeSync presence" ON presence FOR ALL USING (true) WITH CHECK (true);
+-- Disable RLS on public tables to guarantee 100% open client access without policy restrictions
+ALTER TABLE roommates DISABLE ROW LEVEL SECURITY;
+ALTER TABLE bills DISABLE ROW LEVEL SECURITY;
+ALTER TABLE expenses DISABLE ROW LEVEL SECURITY;
+ALTER TABLE settlements DISABLE ROW LEVEL SECURITY;
+ALTER TABLE events DISABLE ROW LEVEL SECURITY;
+ALTER TABLE pantry_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE shopping_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE cleaning_tasks DISABLE ROW LEVEL SECURITY;
+ALTER TABLE maintenance_issues DISABLE ROW LEVEL SECURITY;
+ALTER TABLE presence DISABLE ROW LEVEL SECURITY;
 
 -- Enable Supabase Realtime Broadcasting for all HomeSync tables
 DROP PUBLICATION IF EXISTS supabase_realtime;
