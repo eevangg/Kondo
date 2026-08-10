@@ -81,26 +81,6 @@ export default function Navbar({
             )}
           </button>
 
-          {/* Telegram Bot Config Button */}
-          <button
-            onClick={onOpenTelegramModal}
-            className="btn btn-secondary btn-sm"
-            title="Configure Telegram Bot Settings"
-            style={{ fontSize: '0.8rem', gap: '0.4rem' }}
-          >
-            <Send size={15} color={isTelegramConnected ? '#06b6d4' : 'var(--text-muted)'} />
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-              {isTelegramConnected ? (
-                <>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#06b6d4' }} />
-                  Telegram Bot Active
-                </>
-              ) : (
-                'Telegram Bot Setup'
-              )}
-            </span>
-          </button>
-
           {/* Light / Dark Mode Toggle */}
           <button
             onClick={onToggleTheme}
@@ -110,6 +90,28 @@ export default function Navbar({
           >
             {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#6366f1" />}
           </button>
+
+          {/* Telegram Bot Config Button - Admin Only (Andre) */}
+          {isAdminAndre && (
+            <button
+              onClick={onOpenTelegramModal}
+              className="btn btn-secondary btn-sm"
+              title="Configure Telegram Bot Settings"
+              style={{ fontSize: '0.8rem', gap: '0.4rem' }}
+            >
+              <Send size={15} color={isTelegramConnected ? '#06b6d4' : 'var(--text-muted)'} />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                {isTelegramConnected ? (
+                  <>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#06b6d4' }} />
+                    Telegram Bot Active
+                  </>
+                ) : (
+                  'Telegram Bot Setup'
+                )}
+              </span>
+            </button>
+          )}
 
           {/* Supabase Status Pill - Admin Only (Andre) */}
           {isAdminAndre && (
