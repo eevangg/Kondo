@@ -45,7 +45,6 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Force upgrade all PINs to 6 digits if old 4-digit PINs exist in localStorage
         return parsed.map((r) => ({
           ...r,
           pin: (r.pin && String(r.pin).length === 6) ? String(r.pin) : (r.id === 'r1' ? '123456' : '567890')
@@ -71,7 +70,7 @@ export default function App() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
 
-  // Login Success Handler (Handles Remember Me)
+  // Login Success Handler
   const handleLoginSuccess = (roommateId, stayLoggedIn) => {
     setAuthRoommateId(roommateId);
     setActiveRoommateId(roommateId);
@@ -88,7 +87,7 @@ export default function App() {
     handleShowToast({ type: 'success', message: `Welcome back, ${rm ? rm.name : 'Roommate'}!` });
   };
 
-  // Logout Handler (Mandatory to switch profiles)
+  // Logout Handler
   const handleLogout = () => {
     setAuthRoommateId(null);
     localStorage.removeItem('homesync_auth_user');
@@ -288,7 +287,7 @@ export default function App() {
     setBills((prev) => prev.filter((b) => b.id !== id));
   };
 
-  // Expense Log Handler
+  // Expense Log Handler (Tags ONLY the ower)
   const handleAddExpense = async (newExp) => {
     const item = { ...newExp, id: 'e_' + Date.now() };
     setExpenses((prev) => [item, ...prev]);
@@ -317,11 +316,28 @@ export default function App() {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   };
 
-  // Settle Up Handler
-  const handleSettleUp = (newSettlement) => {
+  // Settlement Handler (Tags ONLY the recipient / payee!)
+  const handleSettleUp = async (newSettlement) => {
     const item = { ...newSettlement, id: 's_' + Date.now(), settled_at: new Date().toISOString() };
     setSettlements((prev) => [item, ...prev]);
-    handleShowToast({ type: 'success', message: 'Settlement recorded!' });
+
+    const payer = roommates.find((r) => r.id === newSettlement.payer_id) || roommates[0];
+    const payee = roommates.find((r) => r.id === newSettlement.payee_id) || roommates[1];
+
+    const recipientTag = payee.telegram_handle || payee.name;
+    const payerName = payer.name;
+    const formattedAmount = Number(newSettlement.amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
+    const noteSuffix = newSettlement.note ? ` (${newSettlement.note})` : '';
+
+    // Single-line clean message tagging ONLY the recipient!
+    const msg = `🤝 ${recipientTag} was paid ${CURRENCY_SYMBOL}${formattedAmount} by ${payerName}${noteSuffix}`;
+
+    const result = await sendTelegramMessage(msg);
+    if (result.success) {
+      handleShowToast({ type: 'success', message: 'Settlement recorded & sent to Telegram!' });
+    } else {
+      handleShowToast({ type: 'success', message: 'Settlement recorded!' });
+    }
   };
 
   const handleAddPantryItem = (newItem) => {
