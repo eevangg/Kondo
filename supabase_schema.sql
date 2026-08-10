@@ -1,4 +1,4 @@
--- HomeSync Supabase Schema Migration
+-- HomeSync Supabase Schema Migration (Updated with Live Condo Data)
 -- Copy & Run this SQL in your Supabase SQL Editor (https://app.supabase.com/project/_/sql)
 
 -- 1. Roommates Table
@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS roommates (
   name TEXT NOT NULL,
   avatar_color TEXT DEFAULT '#6366f1',
   initials TEXT,
-  pin TEXT DEFAULT '1234',
+  pin TEXT DEFAULT '123456',
   telegram_handle TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS roommates (
 -- Seed Initial Roommates (Andre & Gerard)
 INSERT INTO roommates (id, name, avatar_color, initials, pin, telegram_handle)
 VALUES 
-  ('r1', 'Andre', '#6366f1', 'AN', '1234', '@eevangg'),
-  ('r2', 'Gerard', '#06b6d4', 'GR', '5678', '@gerardmolinaa')
+  ('r1', 'Andre', '#6366f1', 'AN', '123456', '@eevangg'),
+  ('r2', 'Gerard', '#06b6d4', 'GR', '567890', '@gerardmolinaa')
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,
   telegram_handle = EXCLUDED.telegram_handle;
@@ -37,6 +37,15 @@ CREATE TABLE IF NOT EXISTS bills (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Clear old dummy bills & seed live bills
+DELETE FROM bills;
+INSERT INTO bills (id, title, amount, due_date, category, paid_by, is_paid, is_recurring, recurrence_interval, status, remarks)
+VALUES
+  ('b1', 'Monthly Rent', 16000.00, '2026-09-01', 'Monthly Dues', 'r1', FALSE, TRUE, 'Monthly', 'Due', 'Monthly condo rent (Due 1st of month)'),
+  ('b2', 'Converge Fiber Internet', 1500.00, '2026-09-01', 'Utilities', 'r1', FALSE, TRUE, 'Monthly', 'Due', 'Converge high-speed internet (Due 1st of month)'),
+  ('b3', 'Electricity (Meralco - June & July)', 10522.63, '2026-07-27', 'Utilities', 'r1', FALSE, TRUE, 'Monthly', 'Overdue', 'Meralco electric bill (Due 27th of month - Overdue)'),
+  ('b4', 'Association Dues + Water', 2562.80, '2026-08-30', 'Monthly Dues', 'r1', FALSE, TRUE, 'Monthly', 'Due', 'Building dues & water utility (Due 30th of month)');
+
 -- 3. Shared Expenses Table
 CREATE TABLE IF NOT EXISTS expenses (
   id TEXT PRIMARY KEY,
@@ -44,7 +53,7 @@ CREATE TABLE IF NOT EXISTS expenses (
   amount NUMERIC(10, 2) NOT NULL,
   paid_by TEXT REFERENCES roommates(id),
   category TEXT DEFAULT 'Groceries',
-  split_type TEXT DEFAULT 'equal', -- 'equal' (50/50) or 'full' (100% owed)
+  split_type TEXT DEFAULT 'equal',
   expense_date DATE NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -76,7 +85,7 @@ CREATE TABLE IF NOT EXISTS pantry_items (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   category TEXT DEFAULT 'Dry Goods',
-  stock_level TEXT DEFAULT 'Full', -- 'Full', 'Medium', 'Low', 'Out'
+  stock_level TEXT DEFAULT 'Full',
   expiration_date DATE,
   reminder_days_before INT DEFAULT 1,
   auto_add_shopping BOOLEAN DEFAULT TRUE,
@@ -106,6 +115,12 @@ CREATE TABLE IF NOT EXISTS cleaning_tasks (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Clear old dummy cleaning tasks & seed live task
+DELETE FROM cleaning_tasks;
+INSERT INTO cleaning_tasks (id, task_name, area, interval_days, last_cleaned_at, last_cleaned_by, streak)
+VALUES
+  ('c1', 'Deep Clean Bathroom', 'Bathroom', 7, '2026-08-05', 'r1', 1);
+
 -- 9. Maintenance & Repairs Queue Table
 CREATE TABLE IF NOT EXISTS maintenance_issues (
   id TEXT PRIMARY KEY,
@@ -113,11 +128,17 @@ CREATE TABLE IF NOT EXISTS maintenance_issues (
   description TEXT,
   location TEXT DEFAULT 'Kitchen',
   priority TEXT DEFAULT 'Medium',
-  status TEXT DEFAULT 'To Fix', -- 'To Fix', 'Fixing', 'Done'
+  status TEXT DEFAULT 'To Fix',
   reported_by TEXT REFERENCES roommates(id),
   assigned_to TEXT REFERENCES roommates(id),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Clear old dummy maintenance & seed live repair
+DELETE FROM maintenance_issues;
+INSERT INTO maintenance_issues (id, title, description, location, priority, status, reported_by, assigned_to)
+VALUES
+  ('m1', 'Broken Kitchen Sink', 'Kitchen sink leak repair.', 'Kitchen', 'High', 'Done', 'r1', 'r1');
 
 -- 10. Condo Presence Status Table
 CREATE TABLE IF NOT EXISTS presence (

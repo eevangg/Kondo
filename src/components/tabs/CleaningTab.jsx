@@ -14,12 +14,8 @@ export default function CleaningTab({
 }) {
   const handleShareCleaningTelegram = async (task) => {
     const cleaner = roommates.find((r) => r.id === task.last_cleaned_by);
-    let text = `🧹 *HOMESYNC CHORE COMPLETED*\n`;
-    text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
-    text += `✨ *Task*: ${task.task_name}\n`;
-    text += `📍 *Area*: ${task.area}\n`;
-    text += `👤 *Cleaned By*: ${cleaner ? cleaner.name : 'Roommate'}\n`;
-    text += `🔥 *Cleaning Streak*: ${task.streak || 1} sessions!\n`;
+    const cleanerName = cleaner ? cleaner.name : 'Roommate';
+    const text = `🧹 ${cleanerName} cleaned ${task.task_name}!`;
 
     const result = await sendTelegramMessage(text);
     if (onShowToast) {
@@ -98,9 +94,13 @@ export default function CleaningTab({
         <div className="grid-cols-2">
           {cleaningTasks.map((task) => {
             const lastCleaner = roommates.find((r) => r.id === task.last_cleaned_by);
-            const lastDate = task.last_cleaned_at
-              ? new Date(task.last_cleaned_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-              : 'Not logged yet';
+            
+            // Format DATE ONLY (No time string!)
+            let lastDate = 'Not logged yet';
+            if (task.last_cleaned_at) {
+              const d = new Date(task.last_cleaned_at);
+              lastDate = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            }
 
             return (
               <div key={task.id} className="glass-card" style={{ padding: '1.25rem' }}>
