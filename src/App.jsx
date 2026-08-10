@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import DashboardHeader from './components/DashboardHeader';
 import ToastNotification from './components/ToastNotification';
 import AuthLandingPage from './components/AuthLandingPage';
+import MobileBottomNav from './components/MobileBottomNav';
 
 import OverviewTab from './components/tabs/OverviewTab';
 import ExpensesBillsTab from './components/tabs/ExpensesBillsTab';
@@ -287,7 +288,7 @@ export default function App() {
     setBills((prev) => prev.filter((b) => b.id !== id));
   };
 
-  // Expense Log Handler (Tags ONLY the ower)
+  // Expense Log Handler
   const handleAddExpense = async (newExp) => {
     const item = { ...newExp, id: 'e_' + Date.now() };
     setExpenses((prev) => [item, ...prev]);
@@ -316,7 +317,7 @@ export default function App() {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   };
 
-  // Settlement Handler (Tags ONLY the recipient / payee!)
+  // Settlement Handler
   const handleSettleUp = async (newSettlement) => {
     const item = { ...newSettlement, id: 's_' + Date.now(), settled_at: new Date().toISOString() };
     setSettlements((prev) => [item, ...prev]);
@@ -329,7 +330,6 @@ export default function App() {
     const formattedAmount = Number(newSettlement.amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
     const noteSuffix = newSettlement.note ? ` (${newSettlement.note})` : '';
 
-    // Single-line clean message tagging ONLY the recipient!
     const msg = `🤝 ${recipientTag} was paid ${CURRENCY_SYMBOL}${formattedAmount} by ${payerName}${noteSuffix}`;
 
     const result = await sendTelegramMessage(msg);
@@ -670,6 +670,13 @@ export default function App() {
         expenses={expenses}
         settlements={settlements}
         onSettleUp={handleSettleUp}
+      />
+
+      {/* Mobile Bottom Navigation & Floating Action Button */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        onSwitchTab={setActiveTab}
+        onOpenAddExpense={() => setActiveModal('expense')}
       />
 
       {/* In-App Floating Toast Notification */}
