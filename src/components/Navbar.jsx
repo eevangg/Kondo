@@ -1,11 +1,13 @@
 import React from 'react';
-import { Home, Database, UserCheck, Sparkles, MapPin } from 'lucide-react';
+import { Home, Database, UserCheck, Sparkles, MapPin, Sun, Moon } from 'lucide-react';
 
 export default function Navbar({
   roommates,
   activeRoommateId,
   setActiveRoommateId,
   presenceState,
+  theme,
+  onToggleTheme,
   isSupabaseConnected,
   onOpenConfigModal,
   onOpenPresenceModal
@@ -43,7 +45,7 @@ export default function Navbar({
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <h1 style={{ fontSize: '1.4rem', fontWeight: 800, background: 'linear-gradient(90deg, #ffffff, #93c5fd)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <h1 style={{ fontSize: '1.4rem', fontWeight: 800, background: 'linear-gradient(90deg, #6366f1, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 HomeSync
               </h1>
               <span className="badge badge-purple">
@@ -56,9 +58,19 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Right Section: Database Status, Presence Badge & Active Roommate Switcher */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
+        {/* Right Section: Theme Toggle, Database Status, Presence Badge & Roommate Switcher */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           
+          {/* Light / Dark Mode Toggle */}
+          <button
+            onClick={onToggleTheme}
+            className="btn btn-secondary btn-sm"
+            style={{ padding: '0.45rem', borderRadius: '50%', width: '36px', height: '36px' }}
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+          >
+            {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#6366f1" />}
+          </button>
+
           {/* Supabase Status Pill */}
           <button
             onClick={onOpenConfigModal}
@@ -99,7 +111,7 @@ export default function Navbar({
           </button>
 
           {/* Active Roommate Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(0,0,0,0.3)', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-glass)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-glass-strong)', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-glass)' }}>
             <UserCheck size={16} color={activeRoommate.avatar_color} />
             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Logged as:</span>
             <select
@@ -116,7 +128,7 @@ export default function Navbar({
               }}
             >
               {roommates.map((r) => (
-                <option key={r.id} value={r.id} style={{ background: '#111827', color: '#ffffff' }}>
+                <option key={r.id} value={r.id} style={{ background: 'var(--bg-surface)', color: 'var(--text-main)' }}>
                   {r.name}
                 </option>
               ))}

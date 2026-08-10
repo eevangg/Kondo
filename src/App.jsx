@@ -39,6 +39,20 @@ export default function App() {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
 
+  // Light / Dark Theme State
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('homesync_theme') || 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('homesync_theme', theme);
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   // Security PIN Modal State
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [pendingRoommateId, setPendingRoommateId] = useState(null);
@@ -286,6 +300,8 @@ export default function App() {
         activeRoommateId={activeRoommateId}
         setActiveRoommateId={handleRequestRoommateSwitch}
         presenceState={presenceState}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         isSupabaseConnected={dbConnected}
         onOpenConfigModal={() => setIsConfigModalOpen(true)}
         onOpenPresenceModal={() => setIsPresenceModalOpen(true)}
