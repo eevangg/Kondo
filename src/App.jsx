@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import DashboardHeader from './components/DashboardHeader';
 import ToastNotification from './components/ToastNotification';
+import AuthLandingPage from './components/AuthLandingPage';
 
 import OverviewTab from './components/tabs/OverviewTab';
 import ExpensesBillsTab from './components/tabs/ExpensesBillsTab';
@@ -34,15 +35,18 @@ import {
   INITIAL_CLEANING,
   INITIAL_MAINTENANCE
 } from './lib/defaultData';
-import { supabase, isSupabaseConnected, getSupabaseCredentials } from './lib/supabase';
-import { getTelegramCredentials, sendTelegramMessage } from './lib/telegram';
+import { supabase, isSupabaseConnected } from './lib/supabase';
+import { sendTelegramMessage } from './lib/telegram';
 import { LayoutDashboard, Receipt, ShoppingBag, Sparkles, Wrench, Calendar as CalendarIcon } from 'lucide-react';
 
 export default function App() {
+  // Authentication & Session Persistence State
+  const [authRoommateId, setAuthRoommateId] = useState(() => {
+    return localStorage.getItem('homesync_auth_user') || sessionStorage.getItem('homesync_auth_user') || null;
+  });
+
   const [activeTab, setActiveTab] = useState('overview');
-  const [activeRoommateId, setActiveRoommateId] = useState('r1');
-  const [dbConnected, setDbConnected] = useState(isSupabaseConnected);
-  const [telegramConnected, setTelegramConnected] = useState(() => getTelegramCredentials().isConfigured);
+  const [activeRoommateId, setActiveRoommateId] = useState(() => authRoommateId || 'r1');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
 
@@ -55,6 +59,31 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('homesync_roommates', JSON.stringify(roommates));
   }, [roommates]);
+
+  // Login Success Handler (Handles Remember Me)
+  const handleLoginSuccess = (roommateId, stayLoggedIn) => {
+    setAuthRoommateId(roommateId);
+    setActiveRoommateId(roommateId);
+
+    if (stayLoggedIn) {
+      localStorage.setItem('homesync_auth_user', roommateId);
+      sessionStorage.removeItem('homesync_auth_user');
+    } else {
+      sessionStorage.setItem('homesync_auth_user', roommateId);
+      localStorage.removeItem('homesync_auth_user');
+    }
+
+    const rm = roommates.find((r) => r.id === roommateId);
+    handleShowToast({ type: 'success', message: `Welcome back, ${rm ? rm.name : 'Roommate'}!` });
+  };
+
+  // Logout Handler
+  const handleLogout = () => {
+    setAuthRoommateId(null);
+    localStorage.removeItem('homesync_auth_user');
+    sessionStorage.removeItem('homesync_auth_user');
+    handleShowToast({ type: 'success', message: 'Logged out & app locked.' });
+  };
 
   // In-App Toast State
   const [toast, setToast] = useState(null);
@@ -171,6 +200,8 @@ export default function App() {
 
   // Background Pantry Expiration Reminder Checker
   useEffect(() => {
+    if (!authRoommateId) return;
+
     const checkPantryExpirations = async () => {
       const today = new Date();
       const notifiedKey = 'homesync_notified_expirations';
@@ -198,7 +229,7 @@ export default function App() {
     };
 
     checkPantryExpirations();
-  }, [pantryItems]);
+  }, [pantryItems, authRoommateId]);
 
   // Presence Save Handler
   const handleSavePresence = (roommateId, newPresence) => {
@@ -248,15 +279,6 @@ export default function App() {
       setActiveRoommateId(pendingRoommateId);
       setPendingRoommateId(null);
     }
-  };
-
-  // Handlers
-  const handleSaveSupabaseConfig = () => {
-    setDbConnected(getSupabaseCredentials().isConfigured);
-  };
-
-  const handleSaveTelegramConfig = () => {
-    setTelegramConnected(getTelegramCredentials().isConfigured);
   };
 
   const handleAddBill = (newBill) => {
@@ -404,6 +426,11 @@ export default function App() {
     setMaintenanceIssues((prev) => prev.filter((m) => m.id !== id));
   };
 
+  // If Not Authenticated ➔ Render Auth Landing Page Portal!
+  if (!authRoommateId) {
+    return <AuthLandingPage roommates={roommates} onLoginSuccess={handleLoginSuccess} />;
+  }
+
   const activeRoommateObj = roommates.find((r) => r.id === activeRoommateId) || roommates[0];
 
   return (
@@ -419,6 +446,7 @@ export default function App() {
         onToggleTheme={handleToggleTheme}
         onOpenPresenceModal={() => setIsPresenceModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Executive Dashboard Header */}
@@ -562,8 +590,6 @@ export default function App() {
         onClose={() => setIsSettingsModalOpen(false)}
         activeRoommate={activeRoommateObj}
         onUpdatePin={handleUpdatePin}
-        onSavedSupabase={handleSaveSupabaseConfig}
-        onSavedTelegram={handleSaveTelegramConfig}
         onShowToast={handleShowToast}
       />
 

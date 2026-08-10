@@ -1,20 +1,10 @@
-// Telegram Bot Integration Helper (Zero Browser alert() popups)
+// Telegram Bot Integration Helper (Environment-Based Secrets)
 
 export function getTelegramCredentials() {
-  const token = localStorage.getItem('homesync_telegram_bot_token') || '';
-  const chatId = localStorage.getItem('homesync_telegram_chat_id') || '';
-  const isConfigured = Boolean(token && chatId);
+  const token = import.meta.env.VITE_TELEGRAM_BOT_TOKEN || localStorage.getItem('homesync_telegram_bot_token') || '';
+  const chatId = import.meta.env.VITE_TELEGRAM_CHAT_ID || localStorage.getItem('homesync_telegram_chat_id') || '';
+  const isConfigured = Boolean(token && chatId && !token.includes('7123456789'));
   return { token, chatId, isConfigured };
-}
-
-export function saveTelegramCredentials(token, chatId) {
-  localStorage.setItem('homesync_telegram_bot_token', token.trim());
-  localStorage.setItem('homesync_telegram_chat_id', chatId.trim());
-}
-
-export function clearTelegramCredentials() {
-  localStorage.removeItem('homesync_telegram_bot_token');
-  localStorage.removeItem('homesync_telegram_chat_id');
 }
 
 export async function sendTelegramMessage(text) {
@@ -23,7 +13,7 @@ export async function sendTelegramMessage(text) {
   if (!isConfigured) {
     return {
       success: false,
-      error: 'Telegram Bot not configured. Please set Bot Token & Chat ID in Telegram settings.'
+      error: 'Telegram Bot credentials not configured in environment.'
     };
   }
 
@@ -58,7 +48,7 @@ export async function sendTelegramPhoto(imageBlob, caption = '') {
   if (!isConfigured) {
     return {
       success: false,
-      error: 'Telegram Bot not configured. Please set Bot Token & Chat ID in Telegram settings.'
+      error: 'Telegram Bot credentials not configured in environment.'
     };
   }
 

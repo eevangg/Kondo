@@ -8,12 +8,12 @@ export default function PinSecurityModal({ isOpen, onClose, targetRoommate, onSu
   if (!isOpen || !targetRoommate) return null;
 
   const handlePinChange = (val) => {
-    const cleaned = val.replace(/\D/g, '').slice(0, 4);
+    const cleaned = val.replace(/\D/g, '').slice(0, 6);
     setPin(cleaned);
     setError('');
 
-    // AUTO-SUBMIT when 4th digit is typed!
-    if (cleaned.length === 4) {
+    // AUTO-SUBMIT when 6th digit is typed!
+    if (cleaned.length === 6) {
       if (cleaned === targetRoommate.pin) {
         onSuccess();
         setPin('');
@@ -28,7 +28,7 @@ export default function PinSecurityModal({ isOpen, onClose, targetRoommate, onSu
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (pin.length < 4) return;
+    if (pin.length < 6) return;
 
     if (pin === targetRoommate.pin) {
       onSuccess();
@@ -68,7 +68,7 @@ export default function PinSecurityModal({ isOpen, onClose, targetRoommate, onSu
           Switch Profile to <span style={{ color: targetRoommate.avatar_color }}>{targetRoommate.name}</span>
         </h3>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-          Enter {targetRoommate.name}'s 4-digit PIN (Auto-submits on 4th digit)
+          Enter {targetRoommate.name}'s 6-digit PIN (Auto-submits on 6th digit)
         </p>
 
         {error && (
@@ -80,11 +80,11 @@ export default function PinSecurityModal({ isOpen, onClose, targetRoommate, onSu
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <input
             type="password"
-            maxLength={4}
+            maxLength={6}
             autoFocus
             className="glass-input"
             style={{ textAlign: 'center', fontSize: '1.6rem', letterSpacing: '0.4rem', fontWeight: 800 }}
-            placeholder="••••"
+            placeholder="••••••"
             value={pin}
             onChange={(e) => handlePinChange(e.target.value)}
           />

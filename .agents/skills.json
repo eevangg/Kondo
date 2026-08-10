@@ -7,6 +7,13 @@
     "systematic-debugging",
     "accessibility-compliance-accessibility-audit",
     "test-driven-development",
-    "git-pushing"
+    "git-pushing",
+    "api-security-best-practices",
+    "auth-implementation-patterns",
+    "backend-security-coder",
+    "frontend-security-coder",
+    "dependency-management-deps-audit",
+    "cc-skill-security-review",
+    "pci-compliance"
   ]
 }

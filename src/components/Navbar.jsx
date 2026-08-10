@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, UserCheck, Sparkles, MapPin, Sun, Moon, Settings } from 'lucide-react';
+import { Home, UserCheck, Sparkles, MapPin, Sun, Moon, Settings, LogOut } from 'lucide-react';
 
 export default function Navbar({
   roommates,
@@ -9,7 +9,8 @@ export default function Navbar({
   theme,
   onToggleTheme,
   onOpenPresenceModal,
-  onOpenSettingsModal
+  onOpenSettingsModal,
+  onLogout
 }) {
   const activeRoommate = roommates.find((r) => r.id === activeRoommateId) || roommates[0];
   const presence = presenceState[activeRoommate.id] || { status: 'At Condo', return_time: null };
@@ -86,12 +87,12 @@ export default function Navbar({
             {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#6366f1" />}
           </button>
 
-          {/* Settings Button (Next to Roommate Selector) */}
+          {/* Settings Button */}
           <button
             onClick={onOpenSettingsModal}
             className="btn btn-secondary btn-sm"
             style={{ padding: '0.45rem', borderRadius: '50%', width: '36px', height: '36px' }}
-            title="Settings & PIN Security"
+            title="Security PIN Settings"
           >
             <Settings size={18} color="var(--accent-primary)" />
           </button>
@@ -120,6 +121,16 @@ export default function Navbar({
               ))}
             </select>
           </div>
+
+          {/* Log Out Button */}
+          <button
+            onClick={onLogout}
+            className="btn btn-secondary btn-sm"
+            style={{ padding: '0.45rem', borderRadius: '50%', width: '36px', height: '36px', color: 'var(--status-danger)' }}
+            title="Log Out & Lock App"
+          >
+            <LogOut size={18} />
+          </button>
 
         </div>
       </div>
