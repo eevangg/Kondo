@@ -26,40 +26,15 @@ import SettingsModal from './components/modals/SettingsModal';
 import {
   CURRENCY_SYMBOL,
   INITIAL_ROOMMATES,
-  INITIAL_EVENTS,
-  INITIAL_BILLS,
-  INITIAL_EXPENSES,
-  INITIAL_PANTRY,
-  INITIAL_SHOPPING,
-  INITIAL_DAILY_ROUTINE,
-  INITIAL_CLEANING,
-  INITIAL_MAINTENANCE
+  INITIAL_DAILY_ROUTINE
 } from './lib/defaultData';
 import { supabase, isSupabaseConnected } from './lib/supabase';
 import { sendTelegramMessage } from './lib/telegram';
 import { LayoutDashboard, Receipt, ShoppingBag, Sparkles, Wrench, Calendar as CalendarIcon } from 'lucide-react';
 
 export default function App() {
-  // Roommates State with Automatic 6-Digit Migration
-  const [roommates, setRoommates] = useState(() => {
-    const saved = localStorage.getItem('homesync_roommates');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return parsed.map((r) => ({
-          ...r,
-          pin: (r.pin && String(r.pin).length === 6) ? String(r.pin) : (r.id === 'r1' ? '123456' : '567890')
-        }));
-      } catch (e) {
-        return INITIAL_ROOMMATES;
-      }
-    }
-    return INITIAL_ROOMMATES;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('homesync_roommates', JSON.stringify(roommates));
-  }, [roommates]);
+  // Roommates State
+  const [roommates, setRoommates] = useState(INITIAL_ROOMMATES);
 
   // Authentication & Session Persistence State
   const [authRoommateId, setAuthRoommateId] = useState(() => {
@@ -70,6 +45,104 @@ export default function App() {
   const [activeRoommateId, setActiveRoommateId] = useState(() => authRoommateId || 'r1');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
+
+  // Database Driven States (No static mock fallbacks)
+  const [events, setEvents] = useState([]);
+  const [presenceState, setPresenceState] = useState({
+    r1: { status: 'At Condo', return_time: null },
+    r2: { status: 'At Condo', return_time: null }
+  });
+  const [bills, setBills] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [settlements, setSettlements] = useState([]);
+  const [pantryItems, setPantryItems] = useState([]);
+  const [shoppingItems, setShoppingItems] = useState([]);
+  const [dailyRoutine, setDailyRoutine] = useState(INITIAL_DAILY_ROUTINE);
+  const [cleaningTasks, setCleaningTasks] = useState([]);
+  const [maintenanceIssues, setMaintenanceIssues] = useState([]);
+
+  // In-App Toast State
+  const [toast, setToast] = useState(null);
+  const handleShowToast = (toastObj) => setToast(toastObj);
+
+  // Light / Dark Theme State
+  const [theme, setTheme] = useState(() => localStorage.getItem('homesync_theme') || 'dark');
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('homesync_theme', theme);
+  }, [theme]);
+
+  const handleToggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  const [isPresenceModalOpen, setIsPresenceModalOpen] = useState(false);
+
+  // Fetch All Initial Data from Supabase Database
+  const fetchAllData = async () => {
+    if (!isSupabaseConnected || !supabase) return;
+    try {
+      const { data: rmData } = await supabase.from('roommates').select('*');
+      if (rmData && rmData.length > 0) setRoommates(rmData);
+
+      const { data: bData } = await supabase.from('bills').select('*').order('created_at', { ascending: false });
+      if (bData) setBills(bData);
+
+      const { data: eData } = await supabase.from('expenses').select('*').order('created_at', { ascending: false });
+      if (eData) setExpenses(eData);
+
+      const { data: sData } = await supabase.from('settlements').select('*').order('settled_at', { ascending: false });
+      if (sData) setSettlements(sData);
+
+      const { data: evData } = await supabase.from('events').select('*').order('event_date', { ascending: true });
+      if (evData) setEvents(evData);
+
+      const { data: pData } = await supabase.from('pantry_items').select('*').order('created_at', { ascending: false });
+      if (pData) setPantryItems(pData);
+
+      const { data: shopData } = await supabase.from('shopping_items').select('*').order('created_at', { ascending: false });
+      if (shopData) setShoppingItems(shopData);
+
+      const { data: cData } = await supabase.from('cleaning_tasks').select('*').order('created_at', { ascending: false });
+      if (cData) setCleaningTasks(cData);
+
+      const { data: mData } = await supabase.from('maintenance_issues').select('*').order('created_at', { ascending: false });
+      if (mData) setMaintenanceIssues(mData);
+
+      const { data: presData } = await supabase.from('presence').select('*');
+      if (presData && presData.length > 0) {
+        const presObj = {};
+        presData.forEach((row) => {
+          presObj[row.roommate_id] = { status: row.status, return_time: row.return_time };
+        });
+        setPresenceState((prev) => ({ ...prev, ...presObj }));
+      }
+    } catch (err) {
+      console.error('Error fetching Supabase data:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  // Supabase Realtime Multi-Device WebSockets Synchronization
+  useEffect(() => {
+    if (!isSupabaseConnected || !supabase) return;
+
+    const channel = supabase
+      .channel('homesync-realtime-channel')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public' },
+        (payload) => {
+          console.log('Realtime change received:', payload);
+          fetchAllData(); // Instantly refresh state on all connected devices
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Login Success Handler
   const handleLoginSuccess = (roommateId, stayLoggedIn) => {
@@ -96,205 +169,43 @@ export default function App() {
     handleShowToast({ type: 'success', message: 'Logged out & app locked.' });
   };
 
-  // In-App Toast State
-  const [toast, setToast] = useState(null);
-  const handleShowToast = (toastObj) => setToast(toastObj);
-
-  // Light / Dark Theme State
-  const [theme, setTheme] = useState(() => localStorage.getItem('homesync_theme') || 'dark');
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('homesync_theme', theme);
-  }, [theme]);
-
-  const handleToggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-
-  // Presence Modal State
-  const [isPresenceModalOpen, setIsPresenceModalOpen] = useState(false);
-
-  // Auto Cache Migration Check (v3 ensures clean sync with Supabase schema)
-  useEffect(() => {
-    const version = localStorage.getItem('homesync_data_version');
-    if (version !== 'v3') {
-      localStorage.removeItem('homesync_bills');
-      localStorage.removeItem('homesync_expenses');
-      localStorage.removeItem('homesync_cleaning');
-      localStorage.removeItem('homesync_maintenance');
-      localStorage.setItem('homesync_data_version', 'v3');
-      window.location.reload();
-    }
-  }, []);
-
-  // Events State
-  const [events, setEvents] = useState(() => {
-    const saved = localStorage.getItem('homesync_events');
-    return saved ? JSON.parse(saved) : INITIAL_EVENTS;
-  });
-
-  // Presence State
-  const [presenceState, setPresenceState] = useState(() => {
-    const saved = localStorage.getItem('homesync_presence');
-    return saved ? JSON.parse(saved) : {
-      r1: { status: 'At Condo', return_time: null },
-      r2: { status: 'At Condo', return_time: null }
-    };
-  });
-
-  const [bills, setBills] = useState(() => {
-    const saved = localStorage.getItem('homesync_bills');
-    return saved ? JSON.parse(saved) : INITIAL_BILLS;
-  });
-
-  const [expenses, setExpenses] = useState(() => {
-    const saved = localStorage.getItem('homesync_expenses');
-    return saved ? JSON.parse(saved) : INITIAL_EXPENSES;
-  });
-
-  const [settlements, setSettlements] = useState(() => {
-    const saved = localStorage.getItem('homesync_settlements');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [pantryItems, setPantryItems] = useState(() => {
-    const saved = localStorage.getItem('homesync_pantry');
-    return saved ? JSON.parse(saved) : INITIAL_PANTRY;
-  });
-
-  const [shoppingItems, setShoppingItems] = useState(() => {
-    const saved = localStorage.getItem('homesync_shopping');
-    return saved ? JSON.parse(saved) : INITIAL_SHOPPING;
-  });
-
-  const [dailyRoutine, setDailyRoutine] = useState(() => {
-    const saved = localStorage.getItem('homesync_daily_routine');
-    return saved ? JSON.parse(saved) : INITIAL_DAILY_ROUTINE;
-  });
-
-  const [cleaningTasks, setCleaningTasks] = useState(() => {
-    const saved = localStorage.getItem('homesync_cleaning');
-    return saved ? JSON.parse(saved) : INITIAL_CLEANING;
-  });
-
-  const [maintenanceIssues, setMaintenanceIssues] = useState(() => {
-    const saved = localStorage.getItem('homesync_maintenance');
-    return saved ? JSON.parse(saved) : INITIAL_MAINTENANCE;
-  });
-
-  // Supabase Live Data Synchronization
-  useEffect(() => {
-    if (!isSupabaseConnected || !supabase) return;
-
-    const fetchSupabaseData = async () => {
-      try {
-        const { data: bData } = await supabase.from('bills').select('*');
-        if (bData && bData.length > 0) setBills(bData);
-
-        const { data: eData } = await supabase.from('expenses').select('*');
-        if (eData) setExpenses(eData);
-
-        const { data: cData } = await supabase.from('cleaning_tasks').select('*');
-        if (cData && cData.length > 0) setCleaningTasks(cData);
-
-        const { data: mData } = await supabase.from('maintenance_issues').select('*');
-        if (mData && mData.length > 0) setMaintenanceIssues(mData);
-      } catch (err) {
-        console.error('Supabase fetch error:', err);
-      }
-    };
-
-    fetchSupabaseData();
-  }, []);
-
-  // LocalStorage Persistence
-  useEffect(() => { localStorage.setItem('homesync_events', JSON.stringify(events)); }, [events]);
-  useEffect(() => { localStorage.setItem('homesync_presence', JSON.stringify(presenceState)); }, [presenceState]);
-  useEffect(() => { localStorage.setItem('homesync_bills', JSON.stringify(bills)); }, [bills]);
-  useEffect(() => { localStorage.setItem('homesync_expenses', JSON.stringify(expenses)); }, [expenses]);
-  useEffect(() => { localStorage.setItem('homesync_settlements', JSON.stringify(settlements)); }, [settlements]);
-  useEffect(() => { localStorage.setItem('homesync_pantry', JSON.stringify(pantryItems)); }, [pantryItems]);
-  useEffect(() => { localStorage.setItem('homesync_shopping', JSON.stringify(shoppingItems)); }, [shoppingItems]);
-  useEffect(() => { localStorage.setItem('homesync_daily_routine', JSON.stringify(dailyRoutine)); }, [dailyRoutine]);
-  useEffect(() => { localStorage.setItem('homesync_cleaning', JSON.stringify(cleaningTasks)); }, [cleaningTasks]);
-  useEffect(() => { localStorage.setItem('homesync_maintenance', JSON.stringify(maintenanceIssues)); }, [maintenanceIssues]);
-
-  // Automatic Presence Timer
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      setPresenceState((prev) => {
-        let changed = false;
-        const nextState = { ...prev };
-
-        Object.keys(nextState).forEach((id) => {
-          const userPres = nextState[id];
-          if (userPres.status === 'Away' && userPres.return_time) {
-            const returnDate = new Date(userPres.return_time);
-            if (now >= returnDate) {
-              nextState[id] = { status: 'At Condo', return_time: null };
-              changed = true;
-            }
-          }
-        });
-
-        return changed ? nextState : prev;
-      });
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Background Pantry Expiration Reminder Checker
-  useEffect(() => {
-    if (!authRoommateId) return;
-
-    const checkPantryExpirations = async () => {
-      const today = new Date();
-      const notifiedKey = 'homesync_notified_expirations';
-      const notified = JSON.parse(localStorage.getItem(notifiedKey) || '{}');
-
-      for (const item of pantryItems) {
-        if (item.expiration_date) {
-          const expDate = new Date(item.expiration_date);
-          const diffTime = expDate - today;
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          const reminderDays = item.reminder_days_before || 1;
-
-          if (diffDays <= reminderDays && diffDays >= 0) {
-            const itemKey = `${item.id}_${item.expiration_date}`;
-            if (!notified[itemKey]) {
-              const dateFormatted = expDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-              const msg = `⚠️ Pantry Alert: ${item.name} is expiring on ${dateFormatted}!`;
-              await sendTelegramMessage(msg);
-              notified[itemKey] = true;
-              localStorage.setItem(notifiedKey, JSON.stringify(notified));
-            }
-          }
-        }
-      }
-    };
-
-    checkPantryExpirations();
-  }, [pantryItems, authRoommateId]);
-
   // Presence Save Handler
-  const handleSavePresence = (roommateId, newPresence) => {
+  const handleSavePresence = async (roommateId, newPresence) => {
     setPresenceState((prev) => ({
       ...prev,
       [roommateId]: newPresence
     }));
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('presence').upsert({
+        roommate_id: roommateId,
+        status: newPresence.status,
+        return_time: newPresence.return_time,
+        updated_at: new Date().toISOString()
+      });
+    }
   };
 
   // PIN Update Handler
-  const handleUpdatePin = (roommateId, newPin) => {
+  const handleUpdatePin = async (roommateId, newPin) => {
     setRoommates((prev) =>
       prev.map((r) => (r.id === roommateId ? { ...r, pin: String(newPin) } : r))
     );
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('roommates').update({ pin: String(newPin) }).eq('id', roommateId);
+    }
   };
 
   // Scheduled Event Handler
   const handleAddEvent = async (newEvent) => {
     const item = { ...newEvent, id: 'ev_' + Date.now() };
     setEvents((prev) => [item, ...prev]);
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('events').insert(item);
+    }
+
     handleShowToast({ type: 'success', message: 'Household event scheduled!' });
 
     const dateFormatted = new Date(newEvent.event_date).toLocaleString(undefined, {
@@ -309,68 +220,85 @@ export default function App() {
     await sendTelegramMessage(msg);
   };
 
-  const handleDeleteEvent = (id) => {
+  const handleDeleteEvent = async (id) => {
     setEvents((prev) => prev.filter((ev) => ev.id !== id));
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('events').delete().eq('id', id);
+    }
   };
 
-  const handleAddBill = (newBill) => {
+  // Bill Management
+  const handleAddBill = async (newBill) => {
     const item = { ...newBill, id: 'b_' + Date.now() };
     setBills((prev) => [item, ...prev]);
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('bills').insert(item);
+    }
+
     handleShowToast({ type: 'success', message: 'Bill added successfully!' });
   };
 
-  // Bill Payment Handler with Automatic Monthly Renewal & Rollover
-  const handleToggleBillPaid = (id, isPaid) => {
-    setBills((prev) => {
-      return prev.map((bill) => {
-        if (bill.id !== id) return bill;
+  const handleToggleBillPaid = async (id, isPaid) => {
+    const targetBill = bills.find((b) => b.id === id);
+    if (!targetBill) return;
 
-        if (isPaid && bill.is_recurring) {
-          // Advance due date by +1 month for next cycle
-          const currentDueDate = new Date(bill.due_date);
-          currentDueDate.setMonth(currentDueDate.getMonth() + 1);
-          const nextDueDateStr = currentDueDate.toISOString().slice(0, 10);
+    let updatedBill;
+    if (isPaid && targetBill.is_recurring) {
+      const currentDueDate = new Date(targetBill.due_date);
+      currentDueDate.setMonth(currentDueDate.getMonth() + 1);
+      const nextDueDateStr = currentDueDate.toISOString().slice(0, 10);
 
-          // Variable electricity bill amount update
-          let nextAmount = bill.amount;
-          if (bill.title.toLowerCase().includes('electricity')) {
-            const inputAmt = window.prompt(`Enter electricity bill amount for next month (${CURRENCY_SYMBOL}):`, bill.amount);
-            if (inputAmt !== null && !isNaN(parseFloat(inputAmt))) {
-              nextAmount = parseFloat(inputAmt);
-            }
-          }
-
-          return {
-            ...bill,
-            amount: nextAmount,
-            is_paid: false, // Reset for next cycle
-            status: 'Due',
-            due_date: nextDueDateStr
-          };
-        } else {
-          return {
-            ...bill,
-            is_paid: isPaid,
-            status: isPaid ? 'Paid by Parents' : (new Date(bill.due_date) < new Date() ? 'Overdue' : 'Due')
-          };
+      let nextAmount = targetBill.amount;
+      if (targetBill.title.toLowerCase().includes('electricity')) {
+        const inputAmt = window.prompt(`Enter electricity bill amount for next month (${CURRENCY_SYMBOL}):`, targetBill.amount);
+        if (inputAmt !== null && !isNaN(parseFloat(inputAmt))) {
+          nextAmount = parseFloat(inputAmt);
         }
-      });
-    });
+      }
+
+      updatedBill = {
+        ...targetBill,
+        amount: nextAmount,
+        is_paid: false,
+        status: 'Due',
+        due_date: nextDueDateStr
+      };
+    } else {
+      updatedBill = {
+        ...targetBill,
+        is_paid: isPaid,
+        status: isPaid ? 'Paid by Parents' : (new Date(targetBill.due_date) < new Date() ? 'Overdue' : 'Due')
+      };
+    }
+
+    setBills((prev) => prev.map((b) => (b.id === id ? updatedBill : b)));
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('bills').update(updatedBill).eq('id', id);
+    }
 
     handleShowToast({
       type: 'success',
-      message: isPaid ? 'Bill paid! Cycle renewed for next month.' : 'Bill marked as Unpaid.'
+      message: isPaid ? 'Bill paid! Cycle renewed for next month.' : 'Bill status updated.'
     });
   };
 
-  const handleDeleteBill = (id) => {
+  const handleDeleteBill = async (id) => {
     setBills((prev) => prev.filter((b) => b.id !== id));
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('bills').delete().eq('id', id);
+    }
   };
 
   // Expense Log Handler
   const handleAddExpense = async (newExp) => {
-    const item = { ...newExp, id: 'e_' + Date.now() };
+    const item = { ...newExp, id: 'e_' + Date.now(), expense_date: newExp.expense_date || new Date().toISOString().slice(0, 10) };
     setExpenses((prev) => [item, ...prev]);
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('expenses').insert(item);
+    }
 
     const payer = roommates.find((r) => r.id === newExp.paid_by) || roommates[0];
     const ower = roommates.find((r) => r.id !== newExp.paid_by) || roommates[1];
@@ -388,18 +316,25 @@ export default function App() {
     if (result.success) {
       handleShowToast({ type: 'success', message: 'Expense logged & sent to Telegram!' });
     } else {
-      handleShowToast({ type: 'success', message: 'Expense logged locally!' });
+      handleShowToast({ type: 'success', message: 'Expense logged!' });
     }
   };
 
-  const handleDeleteExpense = (id) => {
+  const handleDeleteExpense = async (id) => {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('expenses').delete().eq('id', id);
+    }
   };
 
   // Settlement Handler
   const handleSettleUp = async (newSettlement) => {
     const item = { ...newSettlement, id: 's_' + Date.now(), settled_at: new Date().toISOString() };
     setSettlements((prev) => [item, ...prev]);
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('settlements').insert(item);
+    }
 
     const payer = roommates.find((r) => r.id === newSettlement.payer_id) || roommates[0];
     const payee = roommates.find((r) => r.id === newSettlement.payee_id) || roommates[1];
@@ -419,100 +354,146 @@ export default function App() {
     }
   };
 
-  const handleAddPantryItem = (newItem) => {
+  // Pantry & Grocery Management
+  const handleAddPantryItem = async (newItem) => {
     const item = { ...newItem, id: 'p_' + Date.now() };
     setPantryItems((prev) => [item, ...prev]);
 
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('pantry_items').insert(item);
+    }
+
     if (item.stock_level === 'Low' || item.stock_level === 'Out') {
-      setShoppingItems((prev) => [
-        { id: 'shop_' + Date.now(), name: item.name, category: item.category, is_completed: false, pantry_item_id: item.id, added_by: activeRoommateId },
-        ...prev
-      ]);
+      const shopItem = { id: 'shop_' + Date.now(), name: item.name, category: item.category, is_completed: false, pantry_item_id: item.id, added_by: activeRoommateId };
+      setShoppingItems((prev) => [shopItem, ...prev]);
+      if (isSupabaseConnected && supabase) {
+        await supabase.from('shopping_items').insert(shopItem);
+      }
     }
     handleShowToast({ type: 'success', message: 'Pantry item added!' });
   };
 
-  const handleUpdatePantryStock = (id, newLevel) => {
+  const handleUpdatePantryStock = async (id, newLevel) => {
     setPantryItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const updated = { ...item, stock_level: newLevel };
-          if ((newLevel === 'Low' || newLevel === 'Out') && !shoppingItems.some((s) => s.pantry_item_id === id && !s.is_completed)) {
-            setShoppingItems((sPrev) => [
-              { id: 'shop_' + Date.now(), name: item.name, category: item.category, is_completed: false, pantry_item_id: item.id, added_by: activeRoommateId },
-              ...sPrev
-            ]);
-          }
-          return updated;
-        }
-        return item;
-      })
+      prev.map((item) => (item.id === id ? { ...item, stock_level: newLevel } : item))
     );
-  };
 
-  const handleDeletePantryItem = (id) => {
-    setPantryItems((prev) => prev.filter((i) => i.id !== id));
-  };
-
-  const handleToggleShoppingCompleted = (id) => {
-    setShoppingItems((prev) => prev.map((s) => (s.id === id ? { ...s, is_completed: !s.is_completed } : s)));
-  };
-
-  const handleRestockFromShopping = (shopItem) => {
-    if (shopItem.pantry_item_id) {
-      handleUpdatePantryStock(shopItem.pantry_item_id, 'Full');
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('pantry_items').update({ stock_level: newLevel }).eq('id', id);
     }
-    setShoppingItems((prev) => prev.map((s) => (s.id === shopItem.id ? { ...s, is_completed: true } : s)));
+
+    const item = pantryItems.find((i) => i.id === id);
+    if (item && (newLevel === 'Low' || newLevel === 'Out') && !shoppingItems.some((s) => s.pantry_item_id === id && !s.is_completed)) {
+      const shopItem = { id: 'shop_' + Date.now(), name: item.name, category: item.category, is_completed: false, pantry_item_id: id, added_by: activeRoommateId };
+      setShoppingItems((sPrev) => [shopItem, ...sPrev]);
+      if (isSupabaseConnected && supabase) {
+        await supabase.from('shopping_items').insert(shopItem);
+      }
+    }
+  };
+
+  const handleDeletePantryItem = async (id) => {
+    setPantryItems((prev) => prev.filter((i) => i.id !== id));
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('pantry_items').delete().eq('id', id);
+    }
+  };
+
+  const handleToggleShoppingCompleted = async (id) => {
+    const target = shoppingItems.find((s) => s.id === id);
+    if (!target) return;
+    const nextCompleted = !target.is_completed;
+
+    setShoppingItems((prev) => prev.map((s) => (s.id === id ? { ...s, is_completed: nextCompleted } : s)));
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('shopping_items').update({ is_completed: nextCompleted }).eq('id', id);
+    }
+  };
+
+  const handleRestockFromShopping = async (shopItem) => {
+    if (shopItem.pantry_item_id) {
+      await handleUpdatePantryStock(shopItem.pantry_item_id, 'Full');
+    }
+    await handleToggleShoppingCompleted(shopItem.id);
     handleShowToast({ type: 'success', message: 'Item restocked to pantry!' });
   };
 
-  const handleDeleteShoppingItem = (id) => {
+  const handleDeleteShoppingItem = async (id) => {
     setShoppingItems((prev) => prev.filter((s) => s.id !== id));
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('shopping_items').delete().eq('id', id);
+    }
   };
 
   const handleToggleDailyItem = (id) => {
     setDailyRoutine((prev) => prev.map((item) => (item.id === id ? { ...item, is_done: !item.is_done } : item)));
   };
 
-  const handleAddCleaningTask = (newTask) => {
+  // Cleaning Chore Management
+  const handleAddCleaningTask = async (newTask) => {
     const item = { ...newTask, id: 'c_' + Date.now() };
     setCleaningTasks((prev) => [item, ...prev]);
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('cleaning_tasks').insert(item);
+    }
+
     handleShowToast({ type: 'success', message: 'Cleaning chore task added!' });
   };
 
-  const handleToggleTaskCleaned = (id) => {
-    setCleaningTasks((prev) =>
-      prev.map((task) => {
-        if (task.id === id) {
-          return {
-            ...task,
-            last_cleaned_at: new Date().toISOString(),
-            last_cleaned_by: activeRoommateId,
-            streak: (task.streak || 0) + 1
-          };
-        }
-        return task;
-      })
-    );
+  const handleToggleTaskCleaned = async (id) => {
+    const target = cleaningTasks.find((t) => t.id === id);
+    if (!target) return;
+
+    const updated = {
+      ...target,
+      last_cleaned_at: new Date().toISOString(),
+      last_cleaned_by: activeRoommateId,
+      streak: (target.streak || 0) + 1
+    };
+
+    setCleaningTasks((prev) => prev.map((task) => (task.id === id ? updated : task)));
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('cleaning_tasks').update(updated).eq('id', id);
+    }
+
     handleShowToast({ type: 'success', message: 'Chore marked as Cleaned!' });
   };
 
-  const handleDeleteCleaningTask = (id) => {
+  const handleDeleteCleaningTask = async (id) => {
     setCleaningTasks((prev) => prev.filter((c) => c.id !== id));
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('cleaning_tasks').delete().eq('id', id);
+    }
   };
 
-  const handleAddMaintenanceIssue = (newIssue) => {
+  // Maintenance Management
+  const handleAddMaintenanceIssue = async (newIssue) => {
     const item = { ...newIssue, id: 'm_' + Date.now() };
     setMaintenanceIssues((prev) => [item, ...prev]);
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('maintenance_issues').insert(item);
+    }
+
     handleShowToast({ type: 'success', message: 'Repair request logged!' });
   };
 
-  const handleUpdateMaintenanceStatus = (id, newStatus) => {
+  const handleUpdateMaintenanceStatus = async (id, newStatus) => {
     setMaintenanceIssues((prev) => prev.map((m) => (m.id === id ? { ...m, status: newStatus } : m)));
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('maintenance_issues').update({ status: newStatus }).eq('id', id);
+    }
   };
 
-  const handleDeleteMaintenanceIssue = (id) => {
+  const handleDeleteMaintenanceIssue = async (id) => {
     setMaintenanceIssues((prev) => prev.filter((m) => m.id !== id));
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('maintenance_issues').delete().eq('id', id);
+    }
   };
 
   // If Not Authenticated ➔ Render Auth Landing Page Portal!
