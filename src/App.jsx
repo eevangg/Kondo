@@ -112,6 +112,19 @@ export default function App() {
   // Presence Modal State
   const [isPresenceModalOpen, setIsPresenceModalOpen] = useState(false);
 
+  // Auto Cache Migration Check (v3 ensures clean sync with Supabase schema)
+  useEffect(() => {
+    const version = localStorage.getItem('homesync_data_version');
+    if (version !== 'v3') {
+      localStorage.removeItem('homesync_bills');
+      localStorage.removeItem('homesync_expenses');
+      localStorage.removeItem('homesync_cleaning');
+      localStorage.removeItem('homesync_maintenance');
+      localStorage.setItem('homesync_data_version', 'v3');
+      window.location.reload();
+    }
+  }, []);
+
   // Events State
   const [events, setEvents] = useState(() => {
     const saved = localStorage.getItem('homesync_events');
@@ -166,6 +179,31 @@ export default function App() {
     const saved = localStorage.getItem('homesync_maintenance');
     return saved ? JSON.parse(saved) : INITIAL_MAINTENANCE;
   });
+
+  // Supabase Live Data Synchronization
+  useEffect(() => {
+    if (!isSupabaseConnected || !supabase) return;
+
+    const fetchSupabaseData = async () => {
+      try {
+        const { data: bData } = await supabase.from('bills').select('*');
+        if (bData && bData.length > 0) setBills(bData);
+
+        const { data: eData } = await supabase.from('expenses').select('*');
+        if (eData) setExpenses(eData);
+
+        const { data: cData } = await supabase.from('cleaning_tasks').select('*');
+        if (cData && cData.length > 0) setCleaningTasks(cData);
+
+        const { data: mData } = await supabase.from('maintenance_issues').select('*');
+        if (mData && mData.length > 0) setMaintenanceIssues(mData);
+      } catch (err) {
+        console.error('Supabase fetch error:', err);
+      }
+    };
+
+    fetchSupabaseData();
+  }, []);
 
   // LocalStorage Persistence
   useEffect(() => { localStorage.setItem('homesync_events', JSON.stringify(events)); }, [events]);
