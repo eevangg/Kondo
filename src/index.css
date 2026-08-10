@@ -49,13 +49,18 @@ body {
   background: var(--bg-surface);
   color: var(--text-main);
   min-height: 100vh;
-  padding-bottom: 90px; /* Space for Mobile Bottom Nav */
+  /* Safe area inset for iPhone home indicator bar */
+  padding-bottom: calc(95px + env(safe-area-inset-bottom, 0px));
 }
 
 .app-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem 2rem 1rem;
+  /* Safe area inset for iPhone Notch / Dynamic Island */
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  padding-bottom: 2rem;
 }
 
 /* Glassmorphism Cards */
@@ -194,7 +199,7 @@ body {
   .modal-content {
     border-radius: 24px 24px 0 0;
     max-width: 100%;
-    padding: 1.5rem 1.25rem 2rem 1.25rem;
+    padding: 1.5rem 1.25rem calc(2rem + env(safe-area-inset-bottom, 0px)) 1.25rem;
     animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -213,14 +218,15 @@ body {
   }
 }
 
-/* Desktop Web (> 768px): Hide mobile bottom nav & FAB */
+/* Mobile Bottom Navigation Bar with iOS Safe Area Insets */
 .mobile-bottom-nav {
   display: none;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 65px;
+  height: calc(65px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   background: var(--bg-card);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -228,7 +234,6 @@ body {
   z-index: 90;
   justify-content: space-around;
   align-items: center;
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .mobile-nav-item {
@@ -243,17 +248,18 @@ body {
   font-weight: 600;
   cursor: pointer;
   flex: 1;
+  padding-top: 0.3rem;
 }
 
 .mobile-nav-item.active {
   color: var(--accent-secondary);
 }
 
-/* Mobile Floating Action Button (FAB) */
+/* Mobile Floating Action Button (FAB) with iOS Safe Area Insets */
 .mobile-fab-btn {
   display: none;
   position: fixed;
-  bottom: 78px;
+  bottom: calc(78px + env(safe-area-inset-bottom, 0px));
   right: 18px;
   width: 54px;
   height: 54px;
