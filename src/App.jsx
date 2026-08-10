@@ -8,6 +8,7 @@ import ExpensesBillsTab from './components/tabs/ExpensesBillsTab';
 import PantryShoppingTab from './components/tabs/PantryShoppingTab';
 import CleaningTab from './components/tabs/CleaningTab';
 import MaintenanceTab from './components/tabs/MaintenanceTab';
+import EventsTab from './components/tabs/EventsTab';
 
 import AddExpenseModal from './components/modals/AddExpenseModal';
 import AddBillModal from './components/modals/AddBillModal';
@@ -18,9 +19,11 @@ import SettleUpModal from './components/modals/SettleUpModal';
 import ParentBillExportModal from './components/modals/ParentBillExportModal';
 import PinSecurityModal from './components/modals/PinSecurityModal';
 import PresenceModal from './components/modals/PresenceModal';
+import AddEventModal from './components/modals/AddEventModal';
 
 import {
   INITIAL_ROOMMATES,
+  INITIAL_EVENTS,
   INITIAL_BILLS,
   INITIAL_EXPENSES,
   INITIAL_PANTRY,
@@ -30,7 +33,7 @@ import {
   INITIAL_MAINTENANCE
 } from './lib/defaultData';
 import { supabase, isSupabaseConnected, getSupabaseCredentials } from './lib/supabase';
-import { LayoutDashboard, Receipt, ShoppingBag, Sparkles, Wrench } from 'lucide-react';
+import { LayoutDashboard, Receipt, ShoppingBag, Sparkles, Wrench, Calendar as CalendarIcon } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -61,6 +64,12 @@ export default function App() {
   const [isPresenceModalOpen, setIsPresenceModalOpen] = useState(false);
 
   const [roommates, setRoommates] = useState(INITIAL_ROOMMATES);
+
+  // Events State
+  const [events, setEvents] = useState(() => {
+    const saved = localStorage.getItem('homesync_events');
+    return saved ? JSON.parse(saved) : INITIAL_EVENTS;
+  });
 
   // Presence State (At Condo / Away with optional return timestamp)
   const [presenceState, setPresenceState] = useState(() => {
@@ -112,6 +121,7 @@ export default function App() {
   });
 
   // LocalStorage Persistence
+  useEffect(() => { localStorage.setItem('homesync_events', JSON.stringify(events)); }, [events]);
   useEffect(() => { localStorage.setItem('homesync_presence', JSON.stringify(presenceState)); }, [presenceState]);
   useEffect(() => { localStorage.setItem('homesync_bills', JSON.stringify(bills)); }, [bills]);
   useEffect(() => { localStorage.setItem('homesync_expenses', JSON.stringify(expenses)); }, [expenses]);
@@ -143,7 +153,7 @@ export default function App() {
 
         return changed ? nextState : prev;
       });
-    }, 10000); // Check every 10 seconds
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
@@ -154,6 +164,16 @@ export default function App() {
       ...prev,
       [roommateId]: newPresence
     }));
+  };
+
+  // Events Handlers
+  const handleAddEvent = (newEvent) => {
+    const item = { ...newEvent, id: 'ev_' + Date.now() };
+    setEvents((prev) => [item, ...prev]);
+  };
+
+  const handleDeleteEvent = (id) => {
+    setEvents((prev) => prev.filter((ev) => ev.id !== id));
   };
 
   // Handle Roommate Switch with PIN Prompt
@@ -328,6 +348,13 @@ export default function App() {
           <LayoutDashboard size={16} /> Overview
         </button>
         <button
+          className={`btn ${activeTab === 'events' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveTab('events')}
+          style={{ flex: 1, minWidth: '150px' }}
+        >
+          <CalendarIcon size={16} /> Shared Events ({events.length})
+        </button>
+        <button
           className={`btn ${activeTab === 'expenses' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveTab('expenses')}
           style={{ flex: 1, minWidth: '150px' }}
@@ -372,6 +399,15 @@ export default function App() {
           onOpenModal={(type) => setActiveModal(type)}
           onToggleBillPaid={handleToggleBillPaid}
           onToggleTaskCleaned={handleToggleTaskCleaned}
+        />
+      )}
+
+      {activeTab === 'events' && (
+        <EventsTab
+          roommates={roommates}
+          events={events}
+          onOpenModal={(type) => setActiveModal(type)}
+          onDeleteEvent={handleDeleteEvent}
         />
       )}
 
@@ -437,6 +473,13 @@ export default function App() {
         activeRoommate={activeRoommateObj}
         presenceState={presenceState}
         onSavePresence={handleSavePresence}
+      />
+
+      <AddEventModal
+        isOpen={activeModal === 'event'}
+        onClose={() => setActiveModal(null)}
+        activeRoommateId={activeRoommateId}
+        onAddEvent={handleAddEvent}
       />
 
       <ParentBillExportModal

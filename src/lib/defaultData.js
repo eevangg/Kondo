@@ -5,6 +5,25 @@ export const INITIAL_ROOMMATES = [
   { id: 'r2', name: 'Gerard', avatar_color: '#06b6d4', initials: 'GR', pin: '5678' }
 ];
 
+export const INITIAL_EVENTS = [
+  {
+    id: 'ev1',
+    title: 'Condo Maintenance Visit',
+    event_date: '2026-08-12T09:00',
+    category: 'Maintenance',
+    added_by: 'r1',
+    notes: 'Technician checking kitchen faucet drip'
+  },
+  {
+    id: 'ev2',
+    title: 'Professional Unit Cleaning',
+    event_date: '2026-09-01T12:00',
+    category: 'Cleaning',
+    added_by: 'r1',
+    notes: 'Full deep clean session'
+  }
+];
+
 export const INITIAL_BILLS = [
   {
     id: 'b1',
@@ -67,7 +86,7 @@ export const INITIAL_EXPENSES = [
     amount: 130.00,
     paid_by: 'r1',
     category: 'Groceries',
-    split_type: 'full', // 'full' = 100% owed by Gerard, 'equal' = 50/50 split
+    split_type: 'full',
     expense_date: '2026-08-10'
   },
   {

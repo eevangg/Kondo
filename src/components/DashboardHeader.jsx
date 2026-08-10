@@ -35,7 +35,7 @@ export default function DashboardHeader({
     }
   });
 
-  const netBalance = r1PaidTotal - r2PaidTotal; // > 0: r2 owes r1, < 0: r1 owes r2
+  const netBalance = r1PaidTotal - r2PaidTotal;
 
   const pendingBills = bills.filter((b) => !b.is_paid).sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
   const nextBill = pendingBills[0];
@@ -163,17 +163,14 @@ export default function DashboardHeader({
           <button className="btn btn-primary btn-sm" onClick={() => onOpenModal('parentSheet')} style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
             <FileSpreadsheet size={14} /> Parent Bill Sheet & Telegram
           </button>
+          <button className="btn btn-secondary btn-sm" onClick={() => onOpenModal('event')}>
+            <Plus size={14} /> Schedule Event
+          </button>
           <button className="btn btn-secondary btn-sm" onClick={() => onOpenModal('bill')}>
             <Plus size={14} /> Add Bill
           </button>
           <button className="btn btn-secondary btn-sm" onClick={() => onOpenModal('expense')}>
             <Plus size={14} /> Log Expense
-          </button>
-          <button className="btn btn-secondary btn-sm" onClick={() => onOpenModal('pantry')}>
-            <Plus size={14} /> Add Pantry Item
-          </button>
-          <button className="btn btn-secondary btn-sm" onClick={() => onOpenModal('maintenance')}>
-            <Plus size={14} /> Report Repair
           </button>
           <button className="btn btn-secondary btn-sm" onClick={() => onOpenModal('settle')} style={{ borderColor: 'var(--accent-purple)', color: 'var(--accent-purple)' }}>
             <ArrowUpRight size={14} /> Settle Up
