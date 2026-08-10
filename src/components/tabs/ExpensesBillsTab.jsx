@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { DollarSign, Calendar, Plus, CheckCircle2, ArrowUpRight, Receipt, Repeat, UserCheck, Trash2 } from 'lucide-react';
+import { CURRENCY_SYMBOL } from '../../lib/defaultData';
 
 export default function ExpensesBillsTab({
   roommates,
@@ -12,12 +13,11 @@ export default function ExpensesBillsTab({
   onDeleteExpense,
   onDeleteBill
 }) {
-  const [subTab, setSubTab] = useState('expenses'); // 'expenses', 'bills', 'settlements'
+  const [subTab, setSubTab] = useState('expenses');
 
-  const r1 = roommates[0] || { id: 'r1', name: 'Alex' };
-  const r2 = roommates[1] || { id: 'r2', name: 'Sam' };
+  const r1 = roommates[0] || { id: 'r1', name: 'Andre' };
+  const r2 = roommates[1] || { id: 'r2', name: 'Molina' };
 
-  // Calculate Net Balances
   let r1PaidTotal = 0;
   let r2PaidTotal = 0;
 
@@ -53,17 +53,17 @@ export default function ExpensesBillsTab({
             </span>
             {Math.abs(netBalance) < 0.01 ? (
               <h2 style={{ fontSize: '1.6rem', color: 'var(--status-success)', marginTop: '0.2rem' }}>
-                All Settled Up ($0.00)
+                All Settled Up ({CURRENCY_SYMBOL}0.00)
               </h2>
             ) : netBalance > 0 ? (
-              <h2 style={{ fontSize: '1.6rem', color: '#ffffff', marginTop: '0.2rem' }}>
+              <h2 style={{ fontSize: '1.6rem', color: 'var(--text-main)', marginTop: '0.2rem' }}>
                 <span style={{ color: r2.avatar_color }}>{r2.name}</span> owes <span style={{ color: r1.avatar_color }}>{r1.name}</span>{' '}
-                <span style={{ color: 'var(--status-success)', fontWeight: 800 }}>${Math.abs(netBalance).toFixed(2)}</span>
+                <span style={{ color: 'var(--status-success)', fontWeight: 800 }}>{CURRENCY_SYMBOL}{Math.abs(netBalance).toFixed(2)}</span>
               </h2>
             ) : (
-              <h2 style={{ fontSize: '1.6rem', color: '#ffffff', marginTop: '0.2rem' }}>
+              <h2 style={{ fontSize: '1.6rem', color: 'var(--text-main)', marginTop: '0.2rem' }}>
                 <span style={{ color: r1.avatar_color }}>{r1.name}</span> owes <span style={{ color: r2.avatar_color }}>{r2.name}</span>{' '}
-                <span style={{ color: 'var(--status-warning)', fontWeight: 800 }}>${Math.abs(netBalance).toFixed(2)}</span>
+                <span style={{ color: 'var(--status-warning)', fontWeight: 800 }}>{CURRENCY_SYMBOL}{Math.abs(netBalance).toFixed(2)}</span>
               </h2>
             )}
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -136,9 +136,9 @@ export default function ExpensesBillsTab({
                   {expenses.map((exp) => {
                     const payer = roommates.find((r) => r.id === exp.paid_by) || { name: 'Unknown', avatar_color: '#9ca3af' };
                     return (
-                      <tr key={exp.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <tr key={exp.id} style={{ borderBottom: '1px solid var(--border-glass)' }}>
                         <td style={{ padding: '0.75rem', color: 'var(--text-muted)' }}>{exp.expense_date}</td>
-                        <td style={{ padding: '0.75rem', fontWeight: 600 }}>{exp.description}</td>
+                        <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--text-main)' }}>{exp.description}</td>
                         <td style={{ padding: '0.75rem' }}>
                           <span className="badge badge-purple">{exp.category}</span>
                         </td>
@@ -146,7 +146,7 @@ export default function ExpensesBillsTab({
                           {payer.name}
                         </td>
                         <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 800, color: 'var(--text-main)' }}>
-                          ${Number(exp.amount).toFixed(2)}
+                          {CURRENCY_SYMBOL}{Number(exp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         </td>
                         <td style={{ padding: '0.75rem', textAlign: 'right' }}>
                           <button
@@ -185,7 +185,7 @@ export default function ExpensesBillsTab({
                 <div key={bill.id} className="glass-card" style={{ padding: '1.25rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
                     <div>
-                      <h4 style={{ fontSize: '1.05rem', fontWeight: 700 }}>{bill.title}</h4>
+                      <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)' }}>{bill.title}</h4>
                       <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Due Date: {bill.due_date}</span>
                     </div>
                     <span className={`badge ${bill.is_paid ? 'badge-success' : 'badge-warning'}`}>
@@ -195,7 +195,7 @@ export default function ExpensesBillsTab({
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                     <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                      ${Number(bill.amount).toFixed(2)}
+                      {CURRENCY_SYMBOL}{Number(bill.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
                     {bill.is_recurring && (
                       <span style={{ fontSize: '0.75rem', color: 'var(--accent-secondary)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
@@ -206,7 +206,7 @@ export default function ExpensesBillsTab({
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid var(--border-glass)' }}>
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                      Payer: <strong style={{ color: payer ? payer.avatar_color : '#ffffff' }}>{payer ? payer.name : 'Unassigned'}</strong>
+                      Payer: <strong style={{ color: payer ? payer.avatar_color : 'var(--text-main)' }}>{payer ? payer.name : 'Unassigned'}</strong>
                     </span>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button
@@ -247,15 +247,15 @@ export default function ExpensesBillsTab({
                 const payee = roommates.find((r) => r.id === s.payee_id) || { name: 'Roommate B' };
 
                 return (
-                  <div key={s.id} className="glass-card" style={{ padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div key={s.id} className="sub-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <p style={{ fontSize: '0.95rem', fontWeight: 700 }}>
+                      <p style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>
                         <span style={{ color: payer.avatar_color }}>{payer.name}</span> paid <span style={{ color: payee.avatar_color }}>{payee.name}</span>
                       </p>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(s.settled_at).toLocaleString()}</span>
                     </div>
                     <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--status-success)' }}>
-                      ${Number(s.amount).toFixed(2)}
+                      {CURRENCY_SYMBOL}{Number(s.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 );

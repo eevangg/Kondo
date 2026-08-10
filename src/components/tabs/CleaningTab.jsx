@@ -84,16 +84,13 @@ export default function CleaningTab({
               <div
                 key={item.id}
                 onClick={() => onToggleDailyItem(item.id)}
+                className="sub-card"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.75rem',
-                  padding: '0.85rem 1rem',
-                  background: item.is_done ? 'rgba(16,185,129,0.1)' : 'rgba(0,0,0,0.25)',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid ' + (item.is_done ? 'rgba(16,185,129,0.3)' : 'var(--border-glass)'),
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease'
+                  background: item.is_done ? 'var(--status-success-bg)' : 'var(--bg-sub-card)'
                 }}
               >
                 {item.is_done ? (
@@ -121,14 +118,14 @@ export default function CleaningTab({
               <div key={task.id} className="glass-card" style={{ padding: '1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                   <div>
-                    <h4 style={{ fontSize: '1.05rem', fontWeight: 700 }}>{task.task_name}</h4>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)' }}>{task.task_name}</h4>
                     <span className="badge badge-purple" style={{ marginTop: '0.2rem' }}>
                       {task.area} • Every {task.interval_days} days
                     </span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span className="badge badge-warning" style={{ fontSize: '0.75rem', gap: '0.2rem' }}>
-                      <Flame size={12} color="#f59e0b" /> {task.streak || 0} Streak
+                      <Flame size={12} color="var(--status-warning)" /> {task.streak || 0} Streak
                     </span>
                     <button
                       onClick={() => onDeleteCleaningTask(task.id)}

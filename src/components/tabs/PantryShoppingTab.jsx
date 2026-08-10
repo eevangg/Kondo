@@ -11,7 +11,7 @@ export default function PantryShoppingTab({
   onDeletePantryItem,
   onDeleteShoppingItem
 }) {
-  const [activeView, setActiveView] = useState('pantry'); // 'pantry' or 'shopping'
+  const [activeView, setActiveView] = useState('pantry');
 
   const lowOrOutCount = pantryItems.filter((i) => i.stock_level === 'Low' || i.stock_level === 'Out').length;
   const pendingShoppingCount = shoppingItems.filter((i) => !i.is_completed).length;
@@ -49,7 +49,7 @@ export default function PantryShoppingTab({
             <div key={item.id} className="glass-card" style={{ padding: '1.25rem', position: 'relative' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                 <div>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700 }}>{item.name}</h4>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)' }}>{item.name}</h4>
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Category: {item.category}</span>
                 </div>
                 <button
@@ -60,14 +60,12 @@ export default function PantryShoppingTab({
                 </button>
               </div>
 
-              {/* Expiration Date if applicable */}
               {item.expiration_date && (
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                   <AlertCircle size={12} color="var(--status-warning)" /> Expires: {item.expiration_date}
                 </div>
               )}
 
-              {/* Stock Selector Buttons */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.75rem', borderTop: '1px solid var(--border-glass)' }}>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Stock Level:</span>
                 <div style={{ display: 'flex', gap: '0.25rem' }}>
@@ -115,14 +113,11 @@ export default function PantryShoppingTab({
                 {shoppingItems.map((s) => (
                   <div
                     key={s.id}
+                    className="sub-card"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '0.75rem 1rem',
-                      background: 'rgba(0,0,0,0.25)',
-                      borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--border-glass)',
                       opacity: s.is_completed ? 0.6 : 1
                     }}
                   >
@@ -134,7 +129,7 @@ export default function PantryShoppingTab({
                         style={{ width: 18, height: 18, cursor: 'pointer' }}
                       />
                       <div>
-                        <span style={{ fontSize: '0.95rem', fontWeight: 600, textDecoration: s.is_completed ? 'line-through' : 'none' }}>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', textDecoration: s.is_completed ? 'line-through' : 'none' }}>
                           {s.name}
                         </span>
                         <span className="badge badge-purple" style={{ marginLeft: '0.5rem', fontSize: '0.7rem' }}>

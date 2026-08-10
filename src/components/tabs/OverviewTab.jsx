@@ -1,5 +1,6 @@
 import React from 'react';
 import { DollarSign, Calendar, ShoppingBag, Sparkles, CheckCircle2, AlertTriangle, Clock, ArrowRight, ShieldCheck } from 'lucide-react';
+import { CURRENCY_SYMBOL } from '../../lib/defaultData';
 
 export default function OverviewTab({
   roommates,
@@ -15,7 +16,7 @@ export default function OverviewTab({
 }) {
   const pendingBills = bills.filter((b) => !b.is_paid);
   const lowStockPantry = pantryItems.filter((p) => p.stock_level === 'Low' || p.stock_level === 'Out');
-  const pendingMaintenance = maintenanceIssues.filter((m) => m.status !== 'Fixed');
+  const pendingMaintenance = maintenanceIssues.filter((m) => m.status !== 'Done');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -47,23 +48,20 @@ export default function OverviewTab({
                 {pendingBills.slice(0, 3).map((bill) => (
                   <div
                     key={bill.id}
+                    className="sub-card"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.75rem 1rem',
-                      background: 'rgba(0,0,0,0.25)',
-                      borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--border-glass)'
+                      justifyContent: 'space-between'
                     }}
                   >
                     <div>
-                      <h4 style={{ fontSize: '0.9rem', fontWeight: 700 }}>{bill.title}</h4>
+                      <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>{bill.title}</h4>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Due {bill.due_date}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <span style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--status-warning)' }}>
-                        ${Number(bill.amount).toFixed(2)}
+                        {CURRENCY_SYMBOL}{Number(bill.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </span>
                       <button
                         onClick={() => onToggleBillPaid(bill.id, true)}
@@ -100,18 +98,15 @@ export default function OverviewTab({
                 {lowStockPantry.slice(0, 3).map((item) => (
                   <div
                     key={item.id}
+                    className="sub-card"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.75rem 1rem',
-                      background: 'rgba(0,0,0,0.25)',
-                      borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--border-glass)'
+                      justifyContent: 'space-between'
                     }}
                   >
                     <div>
-                      <h4 style={{ fontSize: '0.9rem', fontWeight: 700 }}>{item.name}</h4>
+                      <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>{item.name}</h4>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{item.category}</span>
                     </div>
                     <span className={`badge ${item.stock_level === 'Out' ? 'badge-danger' : 'badge-warning'}`}>
@@ -147,18 +142,15 @@ export default function OverviewTab({
                 return (
                   <div
                     key={task.id}
+                    className="sub-card"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.75rem 1rem',
-                      background: 'rgba(0,0,0,0.25)',
-                      borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--border-glass)'
+                      justifyContent: 'space-between'
                     }}
                   >
                     <div>
-                      <h4 style={{ fontSize: '0.9rem', fontWeight: 700 }}>{task.task_name}</h4>
+                      <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>{task.task_name}</h4>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         Last cleaned: {lastDate} {cleaner ? `by ${cleaner.name}` : ''}
                       </span>
@@ -197,18 +189,15 @@ export default function OverviewTab({
                 {pendingMaintenance.slice(0, 3).map((issue) => (
                   <div
                     key={issue.id}
+                    className="sub-card"
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '0.75rem 1rem',
-                      background: 'rgba(0,0,0,0.25)',
-                      borderRadius: 'var(--radius-md)',
-                      border: '1px solid var(--border-glass)'
+                      justifyContent: 'space-between'
                     }}
                   >
                     <div>
-                      <h4 style={{ fontSize: '0.9rem', fontWeight: 700 }}>{issue.title}</h4>
+                      <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>{issue.title}</h4>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{issue.location}</span>
                     </div>
                     <span className={`badge ${issue.priority === 'Urgent' ? 'badge-danger' : issue.priority === 'Medium' ? 'badge-warning' : 'badge-info'}`}>

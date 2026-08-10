@@ -44,7 +44,7 @@ export default function MaintenanceTab({
                     <span className={`badge ${priorityBadge}`}>{issue.priority} Priority</span>
                     <span className="badge badge-purple">{issue.location}</span>
                   </div>
-                  <h4 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{issue.title}</h4>
+                  <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>{issue.title}</h4>
                 </div>
                 <button
                   onClick={() => onDeleteMaintenanceIssue(issue.id)}
@@ -55,27 +55,27 @@ export default function MaintenanceTab({
               </div>
 
               {issue.description && (
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem', background: 'rgba(0,0,0,0.2)', padding: '0.6rem 0.8rem', borderRadius: 'var(--radius-sm)' }}>
+                <p className="sub-card" style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
                   {issue.description}
                 </p>
               )}
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                <span>Reported by: <strong style={{ color: reporter ? reporter.avatar_color : '#fff' }}>{reporter ? reporter.name : 'Unknown'}</strong></span>
-                <span>Assigned to: <strong style={{ color: assignee ? assignee.avatar_color : '#fff' }}>{assignee ? assignee.name : 'Unassigned'}</strong></span>
+                <span>Reported by: <strong style={{ color: reporter ? reporter.avatar_color : 'var(--text-main)' }}>{reporter ? reporter.name : 'Unknown'}</strong></span>
+                <span>Assigned to: <strong style={{ color: assignee ? assignee.avatar_color : 'var(--text-main)' }}>{assignee ? assignee.name : 'Unassigned'}</strong></span>
               </div>
 
               {/* Status Selector Lifecycle */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.75rem', borderTop: '1px solid var(--border-glass)' }}>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Repair Status:</span>
                 <div style={{ display: 'flex', gap: '0.3rem' }}>
-                  {['Reported', 'In Progress', 'Fixed'].map((status) => {
+                  {['To Fix', 'Fixing', 'Done'].map((status) => {
                     const isActive = issue.status === status;
                     let btnClass = 'btn-secondary';
                     if (isActive) {
-                      if (status === 'Reported') btnClass = 'badge-danger';
-                      else if (status === 'In Progress') btnClass = 'badge-warning';
-                      else if (status === 'Fixed') btnClass = 'badge-success';
+                      if (status === 'To Fix') btnClass = 'badge-danger';
+                      else if (status === 'Fixing') btnClass = 'badge-warning';
+                      else if (status === 'Done') btnClass = 'badge-success';
                     }
 
                     return (
