@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, UserCheck, Sparkles, MapPin, Sun, Moon, Send } from 'lucide-react';
+import { Home, UserCheck, Sparkles, MapPin, Sun, Moon, Settings } from 'lucide-react';
 
 export default function Navbar({
   roommates,
@@ -8,11 +8,8 @@ export default function Navbar({
   presenceState,
   theme,
   onToggleTheme,
-  isSupabaseConnected,
-  isTelegramConnected,
-  onOpenConfigModal,
-  onOpenTelegramModal,
-  onOpenPresenceModal
+  onOpenPresenceModal,
+  onOpenSettingsModal
 }) {
   const activeRoommate = roommates.find((r) => r.id === activeRoommateId) || roommates[0];
   const presence = presenceState[activeRoommate.id] || { status: 'At Condo', return_time: null };
@@ -26,8 +23,6 @@ export default function Navbar({
       minute: '2-digit'
     });
   }
-
-  const isAdminAndre = activeRoommateId === 'r1' || activeRoommate.name === 'Andre';
 
   return (
     <header className="glass-card" style={{ borderRadius: '0 0 20px 20px', padding: '1rem 1.5rem', marginBottom: '1.5rem' }}>
@@ -91,52 +86,15 @@ export default function Navbar({
             {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#6366f1" />}
           </button>
 
-          {/* Telegram Bot Config Button - Admin Only (Andre) */}
-          {isAdminAndre && (
-            <button
-              onClick={onOpenTelegramModal}
-              className="btn btn-secondary btn-sm"
-              title="Configure Telegram Bot Settings"
-              style={{ fontSize: '0.8rem', gap: '0.4rem' }}
-            >
-              <Send size={15} color={isTelegramConnected ? '#06b6d4' : 'var(--text-muted)'} />
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                {isTelegramConnected ? (
-                  <>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#06b6d4' }} />
-                    Telegram Bot Active
-                  </>
-                ) : (
-                  'Telegram Bot Setup'
-                )}
-              </span>
-            </button>
-          )}
-
-          {/* Supabase Status Pill - Admin Only (Andre) */}
-          {isAdminAndre && (
-            <button
-              onClick={onOpenConfigModal}
-              className="btn btn-secondary btn-sm"
-              title="Configure Supabase Database"
-              style={{ fontSize: '0.8rem', gap: '0.4rem' }}
-            >
-              <Database size={15} color={isSupabaseConnected ? '#10b981' : '#f59e0b'} />
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                {isSupabaseConnected ? (
-                  <>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
-                    Supabase Live
-                  </>
-                ) : (
-                  <>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#f59e0b' }} />
-                    Configure Supabase
-                  </>
-                )}
-              </span>
-            </button>
-          )}
+          {/* Settings Button (Next to Roommate Selector) */}
+          <button
+            onClick={onOpenSettingsModal}
+            className="btn btn-secondary btn-sm"
+            style={{ padding: '0.45rem', borderRadius: '50%', width: '36px', height: '36px' }}
+            title="Settings & PIN Security"
+          >
+            <Settings size={18} color="var(--accent-primary)" />
+          </button>
 
           {/* Active Roommate Selector */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-glass-strong)', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-glass)' }}>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import DashboardHeader from './components/DashboardHeader';
-import SupabaseConfigModal from './components/SupabaseConfigModal';
 import ToastNotification from './components/ToastNotification';
 
 import OverviewTab from './components/tabs/OverviewTab';
@@ -21,7 +20,7 @@ import ParentBillExportModal from './components/modals/ParentBillExportModal';
 import PinSecurityModal from './components/modals/PinSecurityModal';
 import PresenceModal from './components/modals/PresenceModal';
 import AddEventModal from './components/modals/AddEventModal';
-import TelegramConfigModal from './components/modals/TelegramConfigModal';
+import SettingsModal from './components/modals/SettingsModal';
 
 import {
   CURRENCY_SYMBOL,
@@ -44,9 +43,18 @@ export default function App() {
   const [activeRoommateId, setActiveRoommateId] = useState('r1');
   const [dbConnected, setDbConnected] = useState(isSupabaseConnected);
   const [telegramConnected, setTelegramConnected] = useState(() => getTelegramCredentials().isConfigured);
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-  const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
+
+  // Roommates State with LocalStorage Persistence
+  const [roommates, setRoommates] = useState(() => {
+    const saved = localStorage.getItem('homesync_roommates');
+    return saved ? JSON.parse(saved) : INITIAL_ROOMMATES;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('homesync_roommates', JSON.stringify(roommates));
+  }, [roommates]);
 
   // In-App Toast State
   const [toast, setToast] = useState(null);
@@ -67,8 +75,6 @@ export default function App() {
 
   // Presence Modal State
   const [isPresenceModalOpen, setIsPresenceModalOpen] = useState(false);
-
-  const [roommates, setRoommates] = useState(INITIAL_ROOMMATES);
 
   // Events State
   const [events, setEvents] = useState(() => {
@@ -137,7 +143,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem('homesync_cleaning', JSON.stringify(cleaningTasks)); }, [cleaningTasks]);
   useEffect(() => { localStorage.setItem('homesync_maintenance', JSON.stringify(maintenanceIssues)); }, [maintenanceIssues]);
 
-  // Automatic Presence Timer: Auto-reverts 'Away' to 'At Condo' when scheduled return_time passes
+  // Automatic Presence Timer
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
@@ -163,7 +169,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Background Pantry Expiration Reminder Checker (Trigger #4)
+  // Background Pantry Expiration Reminder Checker
   useEffect(() => {
     const checkPantryExpirations = async () => {
       const today = new Date();
@@ -180,7 +186,6 @@ export default function App() {
           if (diffDays <= reminderDays && diffDays >= 0) {
             const itemKey = `${item.id}_${item.expiration_date}`;
             if (!notified[itemKey]) {
-              // Trigger #4: Pantry Expiration Alert
               const dateFormatted = expDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
               const msg = `⚠️ Pantry Alert: ${item.name} is expiring on ${dateFormatted}!`;
               await sendTelegramMessage(msg);
@@ -195,7 +200,7 @@ export default function App() {
     checkPantryExpirations();
   }, [pantryItems]);
 
-  // Presence Save Handler (Trigger #2)
+  // Presence Save Handler
   const handleSavePresence = (roommateId, newPresence) => {
     setPresenceState((prev) => ({
       ...prev,
@@ -203,13 +208,19 @@ export default function App() {
     }));
   };
 
-  // Trigger #3: Scheduled Event Handler
+  // PIN Update Handler
+  const handleUpdatePin = (roommateId, newPin) => {
+    setRoommates((prev) =>
+      prev.map((r) => (r.id === roommateId ? { ...r, pin: newPin } : r))
+    );
+  };
+
+  // Scheduled Event Handler
   const handleAddEvent = async (newEvent) => {
     const item = { ...newEvent, id: 'ev_' + Date.now() };
     setEvents((prev) => [item, ...prev]);
     handleShowToast({ type: 'success', message: 'Household event scheduled!' });
 
-    // Trigger #3: Send simplified event notification
     const dateFormatted = new Date(newEvent.event_date).toLocaleString(undefined, {
       weekday: 'short',
       month: 'short',
@@ -240,9 +251,8 @@ export default function App() {
   };
 
   // Handlers
-  const handleSaveSupabaseConfig = (url, key) => {
-    const creds = getSupabaseCredentials();
-    setDbConnected(creds.isConfigured);
+  const handleSaveSupabaseConfig = () => {
+    setDbConnected(getSupabaseCredentials().isConfigured);
   };
 
   const handleSaveTelegramConfig = () => {
@@ -262,7 +272,7 @@ export default function App() {
     setBills((prev) => prev.filter((b) => b.id !== id));
   };
 
-  // Trigger #1: Simplified Expense Log Handler (Only tags the person who owes money!)
+  // Expense Log Handler
   const handleAddExpense = async (newExp) => {
     const item = { ...newExp, id: 'e_' + Date.now() };
     setExpenses((prev) => [item, ...prev]);
@@ -273,7 +283,6 @@ export default function App() {
     const amt = Number(newExp.amount) || 0;
     const owedAmount = newExp.split_type === 'full' ? amt : amt / 2;
 
-    // RULE: Only tag the person who owes money! Do NOT tag the payer.
     const owerTag = ower.telegram_handle || ower.name;
     const payerName = payer.name;
 
@@ -408,11 +417,8 @@ export default function App() {
         presenceState={presenceState}
         theme={theme}
         onToggleTheme={handleToggleTheme}
-        isSupabaseConnected={dbConnected}
-        isTelegramConnected={telegramConnected}
-        onOpenConfigModal={() => setIsConfigModalOpen(true)}
-        onOpenTelegramModal={() => setIsTelegramModalOpen(true)}
         onOpenPresenceModal={() => setIsPresenceModalOpen(true)}
+        onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
       />
 
       {/* Executive Dashboard Header */}
@@ -551,16 +557,13 @@ export default function App() {
       )}
 
       {/* Dialog Modals */}
-      <SupabaseConfigModal
-        isOpen={isConfigModalOpen}
-        onClose={() => setIsConfigModalOpen(false)}
-        onSave={handleSaveSupabaseConfig}
-      />
-
-      <TelegramConfigModal
-        isOpen={isTelegramModalOpen}
-        onClose={() => setIsTelegramModalOpen(false)}
-        onSaved={handleSaveTelegramConfig}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        activeRoommate={activeRoommateObj}
+        onUpdatePin={handleUpdatePin}
+        onSavedSupabase={handleSaveSupabaseConfig}
+        onSavedTelegram={handleSaveTelegramConfig}
         onShowToast={handleShowToast}
       />
 

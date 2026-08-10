@@ -1,35 +1,26 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Retrieve credentials from env or local storage configuration
 export function getSupabaseCredentials() {
-  const envUrl = import.meta.env.VITE_SUPABASE_URL;
-  const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  const localUrl = localStorage.getItem('homesync_supabase_url');
-  const localKey = localStorage.getItem('homesync_supabase_anon_key');
-
-  const url = localUrl || envUrl;
-  const key = localKey || envKey;
-
-  const isConfigured = Boolean(url && key && url.includes('supabase.co'));
-
+  const url = localStorage.getItem('homesync_supabase_url') || import.meta.env.VITE_SUPABASE_URL || '';
+  const key = localStorage.getItem('homesync_supabase_key') || import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+  const isConfigured = Boolean(url && key);
   return { url, key, isConfigured };
 }
 
-export function initSupabaseClient() {
-  const { url, key, isConfigured } = getSupabaseCredentials();
-
-  if (!isConfigured) {
-    return { supabase: null, isConfigured: false };
-  }
-
-  try {
-    const supabase = createClient(url, key);
-    return { supabase, isConfigured: true };
-  } catch (err) {
-    console.error('Failed to initialize Supabase client:', err);
-    return { supabase: null, isConfigured: false };
-  }
+export function saveSupabaseCredentials(url, key) {
+  localStorage.setItem('homesync_supabase_url', url.trim());
+  localStorage.setItem('homesync_supabase_key', key.trim());
 }
 
-export const { supabase, isConfigured: isSupabaseConnected } = initSupabaseClient();
+export function clearSupabaseCredentials() {
+  localStorage.removeItem('homesync_supabase_url');
+  localStorage.removeItem('homesync_supabase_key');
+}
+
+const { url, key, isConfigured } = getSupabaseCredentials();
+
+export const supabase = isConfigured
+  ? createClient(url, key)
+  : null;
+
+export const isSupabaseConnected = isConfigured;
