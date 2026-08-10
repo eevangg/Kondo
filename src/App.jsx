@@ -15,6 +15,8 @@ import AddPantryItemModal from './components/modals/AddPantryItemModal';
 import AddCleaningTaskModal from './components/modals/AddCleaningTaskModal';
 import AddMaintenanceModal from './components/modals/AddMaintenanceModal';
 import SettleUpModal from './components/modals/SettleUpModal';
+import ParentBillExportModal from './components/modals/ParentBillExportModal';
+import PinSecurityModal from './components/modals/PinSecurityModal';
 
 import {
   INITIAL_ROOMMATES,
@@ -22,6 +24,7 @@ import {
   INITIAL_EXPENSES,
   INITIAL_PANTRY,
   INITIAL_SHOPPING,
+  INITIAL_DAILY_ROUTINE,
   INITIAL_CLEANING,
   INITIAL_MAINTENANCE
 } from './lib/defaultData';
@@ -29,14 +32,16 @@ import { supabase, isSupabaseConnected, getSupabaseCredentials } from './lib/sup
 import { LayoutDashboard, Receipt, ShoppingBag, Sparkles, Wrench } from 'lucide-react';
 
 export default function App() {
-  // Navigation & Roommate Context State
   const [activeTab, setActiveTab] = useState('overview');
   const [activeRoommateId, setActiveRoommateId] = useState('r1');
   const [dbConnected, setDbConnected] = useState(isSupabaseConnected);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-  const [activeModal, setActiveModal] = useState(null); // 'expense', 'bill', 'pantry', 'cleaning', 'maintenance', 'settle'
+  const [activeModal, setActiveModal] = useState(null);
 
-  // Application Data States (Initialized with LocalStorage or Defaults)
+  // Security PIN Modal State
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [pendingRoommateId, setPendingRoommateId] = useState(null);
+
   const [roommates, setRoommates] = useState(INITIAL_ROOMMATES);
 
   const [bills, setBills] = useState(() => {
@@ -64,6 +69,11 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_SHOPPING;
   });
 
+  const [dailyRoutine, setDailyRoutine] = useState(() => {
+    const saved = localStorage.getItem('homesync_daily_routine');
+    return saved ? JSON.parse(saved) : INITIAL_DAILY_ROUTINE;
+  });
+
   const [cleaningTasks, setCleaningTasks] = useState(() => {
     const saved = localStorage.getItem('homesync_cleaning');
     return saved ? JSON.parse(saved) : INITIAL_CLEANING;
@@ -74,68 +84,46 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_MAINTENANCE;
   });
 
-  // Sync to LocalStorage
+  // LocalStorage Persistence
   useEffect(() => { localStorage.setItem('homesync_bills', JSON.stringify(bills)); }, [bills]);
   useEffect(() => { localStorage.setItem('homesync_expenses', JSON.stringify(expenses)); }, [expenses]);
   useEffect(() => { localStorage.setItem('homesync_settlements', JSON.stringify(settlements)); }, [settlements]);
   useEffect(() => { localStorage.setItem('homesync_pantry', JSON.stringify(pantryItems)); }, [pantryItems]);
   useEffect(() => { localStorage.setItem('homesync_shopping', JSON.stringify(shoppingItems)); }, [shoppingItems]);
+  useEffect(() => { localStorage.setItem('homesync_daily_routine', JSON.stringify(dailyRoutine)); }, [dailyRoutine]);
   useEffect(() => { localStorage.setItem('homesync_cleaning', JSON.stringify(cleaningTasks)); }, [cleaningTasks]);
   useEffect(() => { localStorage.setItem('homesync_maintenance', JSON.stringify(maintenanceIssues)); }, [maintenanceIssues]);
 
-  // Attempt Supabase Fetch & Subscription if configured
-  useEffect(() => {
-    const creds = getSupabaseCredentials();
-    setDbConnected(creds.isConfigured);
+  // Handle Roommate Switch with PIN Prompt
+  const handleRequestRoommateSwitch = (newId) => {
+    setPendingRoommateId(newId);
+    setIsPinModalOpen(true);
+  };
 
-    if (creds.isConfigured && supabase) {
-      const fetchData = async () => {
-        try {
-          const { data: bData } = await supabase.from('bills').select('*');
-          if (bData && bData.length) setBills(bData);
-
-          const { data: eData } = await supabase.from('expenses').select('*');
-          if (eData && eData.length) setExpenses(eData);
-
-          const { data: pData } = await supabase.from('pantry_items').select('*');
-          if (pData && pData.length) setPantryItems(pData);
-
-          const { data: sData } = await supabase.from('shopping_items').select('*');
-          if (sData && sData.length) setShoppingItems(sData);
-
-          const { data: cData } = await supabase.from('cleaning_tasks').select('*');
-          if (cData && cData.length) setCleaningTasks(cData);
-
-          const { data: mData } = await supabase.from('maintenance_issues').select('*');
-          if (mData && mData.length) setMaintenanceIssues(mData);
-        } catch (err) {
-          console.warn('Supabase fetch notice (falling back to local state):', err.message);
-        }
-      };
-
-      fetchData();
+  const handleConfirmRoommateSwitch = () => {
+    if (pendingRoommateId) {
+      setActiveRoommateId(pendingRoommateId);
+      setPendingRoommateId(null);
     }
-  }, [dbConnected]);
+  };
 
-  // --- Handlers ---
+  // Handlers
   const handleSaveSupabaseConfig = (url, key) => {
     const creds = getSupabaseCredentials();
     setDbConnected(creds.isConfigured);
   };
 
-  // Bills Handlers
   const handleAddBill = (newBill) => {
     const item = { ...newBill, id: 'b_' + Date.now() };
     setBills((prev) => [item, ...prev]);
   };
   const handleToggleBillPaid = (id, isPaid) => {
-    setBills((prev) => prev.map((b) => (b.id === id ? { ...b, is_paid: isPaid } : b)));
+    setBills((prev) => prev.map((b) => (b.id === id ? { ...b, is_paid: isPaid, status: isPaid ? 'Paid by Parents' : 'Due' } : b)));
   };
   const handleDeleteBill = (id) => {
     setBills((prev) => prev.filter((b) => b.id !== id));
   };
 
-  // Expenses & Settlements Handlers
   const handleAddExpense = (newExp) => {
     const item = { ...newExp, id: 'e_' + Date.now() };
     setExpenses((prev) => [item, ...prev]);
@@ -148,7 +136,6 @@ export default function App() {
     setSettlements((prev) => [item, ...prev]);
   };
 
-  // Pantry & Shopping Handlers
   const handleAddPantryItem = (newItem) => {
     const item = { ...newItem, id: 'p_' + Date.now() };
     setPantryItems((prev) => [item, ...prev]);
@@ -198,7 +185,10 @@ export default function App() {
     setShoppingItems((prev) => prev.filter((s) => s.id !== id));
   };
 
-  // Cleaning Handlers
+  const handleToggleDailyItem = (id) => {
+    setDailyRoutine((prev) => prev.map((item) => (item.id === id ? { ...item, is_done: !item.is_done } : item)));
+  };
+
   const handleAddCleaningTask = (newTask) => {
     const item = { ...newTask, id: 'c_' + Date.now() };
     setCleaningTasks((prev) => [item, ...prev]);
@@ -224,7 +214,6 @@ export default function App() {
     setCleaningTasks((prev) => prev.filter((c) => c.id !== id));
   };
 
-  // Maintenance Handlers
   const handleAddMaintenanceIssue = (newIssue) => {
     const item = { ...newIssue, id: 'm_' + Date.now() };
     setMaintenanceIssues((prev) => [item, ...prev]);
@@ -245,7 +234,7 @@ export default function App() {
       <Navbar
         roommates={roommates}
         activeRoommateId={activeRoommateId}
-        setActiveRoommateId={setActiveRoommateId}
+        setActiveRoommateId={handleRequestRoommateSwitch}
         isSupabaseConnected={dbConnected}
         onOpenConfigModal={() => setIsConfigModalOpen(true)}
       />
@@ -253,7 +242,6 @@ export default function App() {
       {/* Executive Dashboard Header */}
       <DashboardHeader
         roommates={roommates}
-        activeRoommateId={activeRoommateId}
         bills={bills}
         expenses={expenses}
         settlements={settlements}
@@ -269,7 +257,7 @@ export default function App() {
           onClick={() => setActiveTab('overview')}
           style={{ flex: 1, minWidth: '130px' }}
         >
-          <LayoutDashboard size={16} /> Executive Overview
+          <LayoutDashboard size={16} /> Overview
         </button>
         <button
           className={`btn ${activeTab === 'expenses' ? 'btn-primary' : 'btn-secondary'}`}
@@ -283,21 +271,21 @@ export default function App() {
           onClick={() => setActiveTab('pantry')}
           style={{ flex: 1, minWidth: '150px' }}
         >
-          <ShoppingBag size={16} /> Pantry & Shopping
+          <ShoppingBag size={16} /> Pantry & Grocery
         </button>
         <button
           className={`btn ${activeTab === 'cleaning' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveTab('cleaning')}
           style={{ flex: 1, minWidth: '150px' }}
         >
-          <Sparkles size={16} /> Cleaning Tracker
+          <Sparkles size={16} /> Cleaning Routine
         </button>
         <button
           className={`btn ${activeTab === 'maintenance' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveTab('maintenance')}
           style={{ flex: 1, minWidth: '150px' }}
         >
-          <Wrench size={16} /> Home Repairs
+          <Wrench size={16} /> Repairs
         </button>
       </div>
 
@@ -347,7 +335,9 @@ export default function App() {
       {activeTab === 'cleaning' && (
         <CleaningTab
           roommates={roommates}
+          dailyRoutine={dailyRoutine}
           cleaningTasks={cleaningTasks}
+          onToggleDailyItem={handleToggleDailyItem}
           onOpenModal={(type) => setActiveModal(type)}
           onToggleTaskCleaned={handleToggleTaskCleaned}
           onDeleteCleaningTask={handleDeleteCleaningTask}
@@ -369,6 +359,21 @@ export default function App() {
         isOpen={isConfigModalOpen}
         onClose={() => setIsConfigModalOpen(false)}
         onSave={handleSaveSupabaseConfig}
+      />
+
+      <ParentBillExportModal
+        isOpen={activeModal === 'parentSheet'}
+        onClose={() => setActiveModal(null)}
+        bills={bills}
+        expenses={expenses}
+        roommates={roommates}
+      />
+
+      <PinSecurityModal
+        isOpen={isPinModalOpen}
+        onClose={() => setIsPinModalOpen(false)}
+        targetRoommate={roommates.find((r) => r.id === pendingRoommateId)}
+        onSuccess={handleConfirmRoommateSwitch}
       />
 
       <AddExpenseModal

@@ -1,49 +1,70 @@
+export const CURRENCY_SYMBOL = '₱';
+
 export const INITIAL_ROOMMATES = [
-  { id: 'r1', name: 'Alex', avatar_color: '#6366f1', initials: 'AX' },
-  { id: 'r2', name: 'Sam', avatar_color: '#ec4899', initials: 'SM' }
+  { id: 'r1', name: 'Andre', avatar_color: '#6366f1', initials: 'AN', pin: '1234' },
+  { id: 'r2', name: 'Molina', avatar_color: '#06b6d4', initials: 'ML', pin: '5678' }
 ];
 
 export const INITIAL_BILLS = [
   {
     id: 'b1',
-    title: 'High-Speed Fiber Internet',
-    amount: 80.00,
+    title: 'July - August Rent',
+    amount: 32000.00,
     due_date: '2026-08-15',
-    category: 'Utilities',
+    category: 'Monthly Dues',
     paid_by: 'r1',
     is_paid: false,
     is_recurring: true,
-    recurrence_interval: 'Monthly'
+    recurrence_interval: 'Monthly',
+    status: 'Due', // Due -> Sent to Parents -> Paid by Parents
+    remarks: 'Monthly condo rent'
   },
   {
     id: 'b2',
-    title: 'Electric & Water Utility',
-    amount: 145.50,
+    title: 'Association Dues + Water (June + July)',
+    amount: 5176.86,
     due_date: '2026-08-20',
-    category: 'Utilities',
-    paid_by: 'r2',
+    category: 'Monthly Dues',
+    paid_by: 'r1',
     is_paid: false,
     is_recurring: true,
-    recurrence_interval: 'Monthly'
+    recurrence_interval: 'Monthly',
+    status: 'Due',
+    remarks: 'Building dues & water utility'
   },
   {
     id: 'b3',
-    title: 'Monthly Rent',
-    amount: 2400.00,
-    due_date: '2026-09-01',
-    category: 'Rent',
+    title: 'Electricity (June + July)',
+    amount: 10522.63,
+    due_date: '2026-08-25',
+    category: 'Utilities',
     paid_by: 'r1',
-    is_paid: true,
+    is_paid: false,
     is_recurring: true,
-    recurrence_interval: 'Monthly'
+    recurrence_interval: 'Monthly',
+    status: 'Due',
+    remarks: 'Meralco electric bill'
+  },
+  {
+    id: 'b4',
+    title: 'High-Speed Fiber Internet',
+    amount: 1899.00,
+    due_date: '2026-08-28',
+    category: 'Utilities',
+    paid_by: 'r1',
+    is_paid: false,
+    is_recurring: true,
+    recurrence_interval: 'Monthly',
+    status: 'Due',
+    remarks: 'PLDT/Globe fiber WiFi'
   }
 ];
 
 export const INITIAL_EXPENSES = [
   {
     id: 'e1',
-    description: 'Weekly Grocery Haul (Trader Joe\'s)',
-    amount: 124.80,
+    description: 'Weekly Grocery Shopping',
+    amount: 3450.00,
     paid_by: 'r1',
     category: 'Groceries',
     split_type: 'equal',
@@ -51,54 +72,45 @@ export const INITIAL_EXPENSES = [
   },
   {
     id: 'e2',
-    description: 'Dishwashing Pods & Paper Towels',
-    amount: 32.50,
+    description: 'Drinking Water Refill (5 Gallons)',
+    amount: 350.00,
     paid_by: 'r2',
     category: 'Household',
     split_type: 'equal',
     expense_date: '2026-08-05'
-  },
-  {
-    id: 'e3',
-    description: 'Air Filter 2-Pack',
-    amount: 28.00,
-    paid_by: 'r1',
-    category: 'Maintenance',
-    split_type: 'equal',
-    expense_date: '2026-08-02'
   }
 ];
 
 export const INITIAL_PANTRY = [
   {
     id: 'p1',
-    name: 'Oat Milk (Barista Blend)',
-    category: 'Dairy/Refrigerated',
+    name: 'Drinking Water Gallons',
+    category: 'Household Essentials',
     stock_level: 'Low',
-    expiration_date: '2026-08-18',
+    expiration_date: null,
     auto_add_shopping: true
   },
   {
     id: 'p2',
-    name: 'Espresso Coffee Beans',
-    category: 'Pantry',
-    stock_level: 'Full',
-    expiration_date: '2026-11-30',
+    name: 'Eggs & Milk',
+    category: 'Fridge',
+    stock_level: 'Medium',
+    expiration_date: '2026-08-18',
     auto_add_shopping: true
   },
   {
     id: 'p3',
-    name: 'Olive Oil (Extra Virgin)',
-    category: 'Pantry',
-    stock_level: 'Medium',
-    expiration_date: '2027-01-15',
+    name: 'Frozen Chicken Breasts',
+    category: 'Freezer',
+    stock_level: 'Full',
+    expiration_date: '2026-09-30',
     auto_add_shopping: true
   },
   {
     id: 'p4',
-    name: 'Trash Bags (13 Gallon)',
-    category: 'Household Supplies',
-    stock_level: 'Out',
+    name: 'Rice & Instant Coffee',
+    category: 'Dry Goods',
+    stock_level: 'Full',
     expiration_date: null,
     auto_add_shopping: true
   }
@@ -107,28 +119,17 @@ export const INITIAL_PANTRY = [
 export const INITIAL_SHOPPING = [
   {
     id: 's1',
-    name: 'Oat Milk (Barista Blend)',
-    category: 'Dairy/Refrigerated',
+    name: 'Drinking Water Gallon Refill',
+    category: 'Household Essentials',
     is_completed: false,
     pantry_item_id: 'p1',
     added_by: 'r1'
-  },
-  {
-    id: 's2',
-    name: 'Trash Bags (13 Gallon)',
-    category: 'Household Supplies',
-    is_completed: false,
-    pantry_item_id: 'p4',
-    added_by: 'r2'
-  },
-  {
-    id: 's3',
-    name: 'Avocados & Sourdough Bread',
-    category: 'Groceries',
-    is_completed: true,
-    pantry_item_id: null,
-    added_by: 'r1'
   }
+];
+
+export const INITIAL_DAILY_ROUTINE = [
+  { id: 'dr1', title: 'Take Out Trash', is_done: false },
+  { id: 'dr2', title: 'Clean Kitchen & Wipe Counters', is_done: false }
 ];
 
 export const INITIAL_CLEANING = [
@@ -137,27 +138,9 @@ export const INITIAL_CLEANING = [
     task_name: 'Deep Clean Bathroom & Shower',
     area: 'Bathroom',
     interval_days: 7,
-    last_cleaned_at: '2026-08-04T10:00:00.000Z',
+    last_cleaned_at: '2026-08-05T10:00:00.000Z',
     last_cleaned_by: 'r1',
     streak: 3
-  },
-  {
-    id: 'c2',
-    task_name: 'Wipe Kitchen Counters & Sink',
-    area: 'Kitchen',
-    interval_days: 3,
-    last_cleaned_at: '2026-08-09T18:30:00.000Z',
-    last_cleaned_by: 'r2',
-    streak: 5
-  },
-  {
-    id: 'c3',
-    task_name: 'Vacuum Living Room & Rug',
-    area: 'Living Room',
-    interval_days: 7,
-    last_cleaned_at: '2026-08-01T14:00:00.000Z',
-    last_cleaned_by: 'r1',
-    streak: 2
   }
 ];
 
@@ -165,21 +148,11 @@ export const INITIAL_MAINTENANCE = [
   {
     id: 'm1',
     title: 'Kitchen Sink Faucet Dripping',
-    description: 'Slow drip from main handle joint. Needs new washer or O-ring.',
+    description: 'Slow drip from handle joint.',
     location: 'Kitchen',
-    priority: 'Urgent',
-    status: 'Reported',
+    priority: 'Medium',
+    status: 'To Fix',
     reported_by: 'r2',
     assigned_to: 'r1'
-  },
-  {
-    id: 'm2',
-    title: 'Hallway Lightbulb Replacement',
-    description: 'Bulb flickers when turned on. Need LED warm white bulb.',
-    location: 'Hallway',
-    priority: 'Low',
-    status: 'In Progress',
-    reported_by: 'r1',
-    assigned_to: 'r2'
   }
 ];
