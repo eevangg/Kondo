@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { X, FileSpreadsheet, Send, Image as ImageIcon, Download } from 'lucide-react';
+import { X, FileSpreadsheet, Send, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { CURRENCY_SYMBOL } from '../../lib/defaultData';
-import { sendTelegramPhoto, sendTelegramMessage } from '../../lib/telegram';
+import { sendTelegramPhoto } from '../../lib/telegram';
 
-export default function ParentBillExportModal({ isOpen, onClose, bills, expenses, roommates }) {
+export default function ParentBillExportModal({ isOpen, onClose, bills, expenses, roommates, onShowToast }) {
   const tableRef = useRef(null);
   const [sending, setSending] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -26,7 +26,6 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
 
   const grandTotalGerard = duesGerard + utilitiesGerard;
 
-  // Capture table as high-resolution PNG image blob
   const generateImageBlob = async () => {
     if (!tableRef.current) return null;
     const canvas = await html2canvas(tableRef.current, {
@@ -46,13 +45,20 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
       const blob = await generateImageBlob();
       if (blob) {
         const caption = `📋 *HOUSEHOLD BILLS STATEMENT*\nGrand Total (${r2.name}'s Share): *${CURRENCY_SYMBOL}${grandTotalGerard.toLocaleString('en-US', { minimumFractionDigits: 2 })}*`;
-        await sendTelegramPhoto(blob, caption);
+        const result = await sendTelegramPhoto(blob, caption);
+        
+        if (onShowToast) {
+          onShowToast({
+            type: result.success ? 'success' : 'error',
+            message: result.success ? result.message : result.error
+          });
+        }
       } else {
-        alert('Failed to render billing sheet image.');
+        if (onShowToast) onShowToast({ type: 'error', message: 'Failed to render billing sheet image.' });
       }
     } catch (e) {
       console.error('Error generating billing sheet image:', e);
-      alert('Error rendering billing table image.');
+      if (onShowToast) onShowToast({ type: 'error', message: 'Error rendering billing table image.' });
     }
     setSending(false);
   };
@@ -68,9 +74,11 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
         a.download = `HomeSync_Billing_Statement_${new Date().toISOString().split('T')[0]}.png`;
         a.click();
         URL.revokeObjectURL(url);
+        if (onShowToast) onShowToast({ type: 'success', message: 'Billing statement PNG downloaded!' });
       }
     } catch (e) {
       console.error('Error downloading image:', e);
+      if (onShowToast) onShowToast({ type: 'error', message: 'Failed to download PNG image.' });
     }
     setDownloading(false);
   };
@@ -91,7 +99,7 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
         </div>
 
         <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          Exact spreadsheet table matching your household billing format. Sends as a <strong>crisp, high-resolution image</strong> directly to Telegram!
+          Exact spreadsheet table matching your household parent statement. Sends as a <strong>crisp, high-resolution image</strong> directly to Telegram!
         </p>
 
         {/* Tabulated Spreadsheet Table Container (Ref for html2canvas) */}

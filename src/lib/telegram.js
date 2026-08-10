@@ -1,4 +1,4 @@
-// Telegram Bot Integration Helper
+// Telegram Bot Integration Helper (Zero Browser alert() popups)
 
 export function getTelegramCredentials() {
   const token = localStorage.getItem('homesync_telegram_bot_token') || '';
@@ -21,13 +21,10 @@ export async function sendTelegramMessage(text) {
   const { token, chatId, isConfigured } = getTelegramCredentials();
 
   if (!isConfigured) {
-    try {
-      await navigator.clipboard.writeText(text);
-      alert('Telegram Bot not configured. Formatted text copied to clipboard! Configure Bot Token in settings for 1-click auto-sending.');
-    } catch (e) {
-      alert('Telegram Bot not configured. Please configure Bot Token & Chat ID in settings.');
-    }
-    return false;
+    return {
+      success: false,
+      error: 'Telegram Bot not configured. Please set Bot Token & Chat ID in Telegram settings.'
+    };
   }
 
   try {
@@ -44,17 +41,14 @@ export async function sendTelegramMessage(text) {
     const data = await response.json();
 
     if (data.ok) {
-      alert('🚀 Message sent directly to Telegram group chat!');
-      return true;
+      return { success: true, message: '🚀 Sent to Telegram group chat!' };
     } else {
       console.error('Telegram API error:', data);
-      alert(`Telegram Bot Error: ${data.description || 'Failed to send message'}`);
-      return false;
+      return { success: false, error: data.description || 'Failed to send Telegram message.' };
     }
   } catch (err) {
     console.error('Network error sending Telegram message:', err);
-    alert('Failed to reach Telegram API. Please check your internet connection.');
-    return false;
+    return { success: false, error: 'Network error. Please check internet connection.' };
   }
 }
 
@@ -62,8 +56,10 @@ export async function sendTelegramPhoto(imageBlob, caption = '') {
   const { token, chatId, isConfigured } = getTelegramCredentials();
 
   if (!isConfigured) {
-    alert('Telegram Bot not configured. Please configure Bot Token & Chat ID in settings pill first.');
-    return false;
+    return {
+      success: false,
+      error: 'Telegram Bot not configured. Please set Bot Token & Chat ID in Telegram settings.'
+    };
   }
 
   const formData = new FormData();
@@ -83,16 +79,13 @@ export async function sendTelegramPhoto(imageBlob, caption = '') {
     const data = await response.json();
 
     if (data.ok) {
-      alert('🖼️ High-resolution Billing Sheet image sent directly to Telegram group chat!');
-      return true;
+      return { success: true, message: '🖼️ Billing Sheet Image sent to Telegram!' };
     } else {
       console.error('Telegram sendPhoto error:', data);
-      alert(`Telegram Bot Photo Error: ${data.description || 'Failed to send image'}`);
-      return false;
+      return { success: false, error: data.description || 'Failed to send image to Telegram.' };
     }
   } catch (err) {
     console.error('Network error sending Telegram photo:', err);
-    alert('Failed to send image to Telegram API. Please check internet connection.');
-    return false;
+    return { success: false, error: 'Network error. Please check internet connection.' };
   }
 }

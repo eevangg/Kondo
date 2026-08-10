@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, CheckCircle2, Plus, Calendar, ShieldCheck, Flame, Trash2, Send } from 'lucide-react';
+import { Sparkles, CheckCircle2, Plus, Flame, Trash2, Send } from 'lucide-react';
 import { sendTelegramMessage } from '../../lib/telegram';
 
 export default function CleaningTab({
@@ -9,7 +9,8 @@ export default function CleaningTab({
   onToggleDailyItem,
   onOpenModal,
   onToggleTaskCleaned,
-  onDeleteCleaningTask
+  onDeleteCleaningTask,
+  onShowToast
 }) {
   const handleShareCleaningTelegram = async (task) => {
     const cleaner = roommates.find((r) => r.id === task.last_cleaned_by);
@@ -20,7 +21,13 @@ export default function CleaningTab({
     text += `👤 *Cleaned By*: ${cleaner ? cleaner.name : 'Roommate'}\n`;
     text += `🔥 *Cleaning Streak*: ${task.streak || 1} sessions!\n`;
 
-    await sendTelegramMessage(text);
+    const result = await sendTelegramMessage(text);
+    if (onShowToast) {
+      onShowToast({
+        type: result.success ? 'success' : 'error',
+        message: result.success ? result.message : result.error
+      });
+    }
   };
 
   return (

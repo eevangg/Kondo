@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { X, Send, Check, Key, MessageSquare, ExternalLink } from 'lucide-react';
+import { X, Send, Check, AlertTriangle } from 'lucide-react';
 import { getTelegramCredentials, saveTelegramCredentials, clearTelegramCredentials, sendTelegramMessage } from '../../lib/telegram';
 
-export default function TelegramConfigModal({ isOpen, onClose, onSaved }) {
+export default function TelegramConfigModal({ isOpen, onClose, onSaved, onShowToast }) {
   const initial = getTelegramCredentials();
   const [token, setToken] = useState(initial.token);
   const [chatId, setChatId] = useState(initial.chatId);
   const [testing, setTesting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState(null); // { type: 'success'|'error', text: '' }
 
   if (!isOpen) return null;
 
@@ -14,19 +15,27 @@ export default function TelegramConfigModal({ isOpen, onClose, onSaved }) {
     e.preventDefault();
     saveTelegramCredentials(token, chatId);
     if (onSaved) onSaved();
+    if (onShowToast) onShowToast({ type: 'success', message: 'Telegram Bot credentials saved!' });
     onClose();
   };
 
   const handleTest = async () => {
     if (!token || !chatId) {
-      alert('Please enter both Bot Token and Chat ID before testing.');
+      setStatusMessage({ type: 'error', text: 'Please enter both Bot Token and Chat ID before testing.' });
       return;
     }
 
     setTesting(true);
+    setStatusMessage(null);
     saveTelegramCredentials(token, chatId);
-    const success = await sendTelegramMessage('🤖 *HomeSync Test Message*: Telegram Bot connection successful!');
+    const result = await sendTelegramMessage('🤖 *HomeSync Test Message*: Telegram Bot connection successful!');
     setTesting(false);
+
+    if (result.success) {
+      setStatusMessage({ type: 'success', text: 'Test message sent successfully to your Telegram group!' });
+    } else {
+      setStatusMessage({ type: 'error', text: result.error });
+    }
   };
 
   const handleDisconnect = () => {
@@ -34,6 +43,7 @@ export default function TelegramConfigModal({ isOpen, onClose, onSaved }) {
     setToken('');
     setChatId('');
     if (onSaved) onSaved();
+    if (onShowToast) onShowToast({ type: 'success', message: 'Telegram Bot disconnected.' });
     onClose();
   };
 
@@ -52,9 +62,29 @@ export default function TelegramConfigModal({ isOpen, onClose, onSaved }) {
           </button>
         </div>
 
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.5 }}>
           Connect your Telegram Bot to send automated parent bill statements, event notifications, and presence status updates directly to your group chat!
         </p>
+
+        {/* Inline Status Message Banner */}
+        {statusMessage && (
+          <div
+            className="sub-card"
+            style={{
+              marginBottom: '1rem',
+              background: statusMessage.type === 'error' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+              border: `1px solid ${statusMessage.type === 'error' ? 'var(--status-danger)' : 'var(--status-success)'}`,
+              color: statusMessage.type === 'error' ? 'var(--status-danger)' : 'var(--status-success)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontSize: '0.85rem'
+            }}
+          >
+            {statusMessage.type === 'error' ? <AlertTriangle size={18} /> : <Check size={18} />}
+            <span>{statusMessage.text}</span>
+          </div>
+        )}
 
         {/* Credentials Form */}
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -107,7 +137,7 @@ export default function TelegramConfigModal({ isOpen, onClose, onSaved }) {
               <Send size={14} /> {testing ? 'Sending...' : 'Test Connection'}
             </button>
             <button type="button" onClick={onClose} className="btn btn-secondary btn-sm">Cancel</button>
-            <button type="submit" className="btn btn-primary btn-sm"><Check size={14} /> Save Telegram Settings</button>
+            <button type="submit" className="btn btn-primary btn-sm"><Check size={14} /> Save Settings</button>
           </div>
         </form>
 

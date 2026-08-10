@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { X, MapPin, Check, Clock, Send } from 'lucide-react';
+import { X, MapPin, Send } from 'lucide-react';
 import { sendTelegramMessage } from '../../lib/telegram';
 
-export default function PresenceModal({ isOpen, onClose, activeRoommate, presenceState, onSavePresence }) {
+export default function PresenceModal({ isOpen, onClose, activeRoommate, presenceState, onSavePresence, onShowToast }) {
   const currentPresence = presenceState[activeRoommate.id] || { status: 'At Condo', return_time: null };
   
   const [status, setStatus] = useState(currentPresence.status);
@@ -42,7 +42,13 @@ export default function PresenceModal({ isOpen, onClose, activeRoommate, presenc
       text += `🟢 *${activeRoommate.name}* is now *At Condo*!\n`;
     }
 
-    await sendTelegramMessage(text);
+    const result = await sendTelegramMessage(text);
+    if (onShowToast) {
+      onShowToast({
+        type: result.success ? 'success' : 'error',
+        message: result.success ? result.message : result.error
+      });
+    }
     onClose();
   };
 

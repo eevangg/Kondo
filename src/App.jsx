@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import DashboardHeader from './components/DashboardHeader';
 import SupabaseConfigModal from './components/SupabaseConfigModal';
+import ToastNotification from './components/ToastNotification';
 
 import OverviewTab from './components/tabs/OverviewTab';
 import ExpensesBillsTab from './components/tabs/ExpensesBillsTab';
@@ -46,6 +47,13 @@ export default function App() {
   const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
 
+  // In-App Toast State (Zero browser alert() popups!)
+  const [toast, setToast] = useState(null);
+
+  const handleShowToast = (toastObj) => {
+    setToast(toastObj);
+  };
+
   // Light / Dark Theme State
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('homesync_theme') || 'dark';
@@ -75,7 +83,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_EVENTS;
   });
 
-  // Presence State (At Condo / Away with optional return timestamp)
+  // Presence State
   const [presenceState, setPresenceState] = useState(() => {
     const saved = localStorage.getItem('homesync_presence');
     return saved ? JSON.parse(saved) : {
@@ -174,6 +182,7 @@ export default function App() {
   const handleAddEvent = (newEvent) => {
     const item = { ...newEvent, id: 'ev_' + Date.now() };
     setEvents((prev) => [item, ...prev]);
+    handleShowToast({ type: 'success', message: 'Household event scheduled!' });
   };
 
   const handleDeleteEvent = (id) => {
@@ -206,9 +215,11 @@ export default function App() {
   const handleAddBill = (newBill) => {
     const item = { ...newBill, id: 'b_' + Date.now() };
     setBills((prev) => [item, ...prev]);
+    handleShowToast({ type: 'success', message: 'Bill added successfully!' });
   };
   const handleToggleBillPaid = (id, isPaid) => {
     setBills((prev) => prev.map((b) => (b.id === id ? { ...b, is_paid: isPaid, status: isPaid ? 'Paid by Parents' : 'Due' } : b)));
+    handleShowToast({ type: 'success', message: isPaid ? 'Bill marked as Paid!' : 'Bill marked as Unpaid.' });
   };
   const handleDeleteBill = (id) => {
     setBills((prev) => prev.filter((b) => b.id !== id));
@@ -217,6 +228,7 @@ export default function App() {
   const handleAddExpense = (newExp) => {
     const item = { ...newExp, id: 'e_' + Date.now() };
     setExpenses((prev) => [item, ...prev]);
+    handleShowToast({ type: 'success', message: 'Expense logged successfully!' });
   };
   const handleDeleteExpense = (id) => {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
@@ -224,6 +236,7 @@ export default function App() {
   const handleSettleUp = (newSettlement) => {
     const item = { ...newSettlement, id: 's_' + Date.now(), settled_at: new Date().toISOString() };
     setSettlements((prev) => [item, ...prev]);
+    handleShowToast({ type: 'success', message: 'Settlement recorded!' });
   };
 
   const handleAddPantryItem = (newItem) => {
@@ -236,6 +249,7 @@ export default function App() {
         ...prev
       ]);
     }
+    handleShowToast({ type: 'success', message: 'Pantry item added!' });
   };
 
   const handleUpdatePantryStock = (id, newLevel) => {
@@ -269,6 +283,7 @@ export default function App() {
       handleUpdatePantryStock(shopItem.pantry_item_id, 'Full');
     }
     setShoppingItems((prev) => prev.map((s) => (s.id === shopItem.id ? { ...s, is_completed: true } : s)));
+    handleShowToast({ type: 'success', message: 'Item restocked to pantry!' });
   };
 
   const handleDeleteShoppingItem = (id) => {
@@ -282,6 +297,7 @@ export default function App() {
   const handleAddCleaningTask = (newTask) => {
     const item = { ...newTask, id: 'c_' + Date.now() };
     setCleaningTasks((prev) => [item, ...prev]);
+    handleShowToast({ type: 'success', message: 'Cleaning chore task added!' });
   };
 
   const handleToggleTaskCleaned = (id) => {
@@ -298,6 +314,7 @@ export default function App() {
         return task;
       })
     );
+    handleShowToast({ type: 'success', message: 'Chore marked as Cleaned! Streak updated.' });
   };
 
   const handleDeleteCleaningTask = (id) => {
@@ -307,6 +324,7 @@ export default function App() {
   const handleAddMaintenanceIssue = (newIssue) => {
     const item = { ...newIssue, id: 'm_' + Date.now() };
     setMaintenanceIssues((prev) => [item, ...prev]);
+    handleShowToast({ type: 'success', message: 'Repair request logged!' });
   };
 
   const handleUpdateMaintenanceStatus = (id, newStatus) => {
@@ -418,6 +436,7 @@ export default function App() {
           events={events}
           onOpenModal={(type) => setActiveModal(type)}
           onDeleteEvent={handleDeleteEvent}
+          onShowToast={handleShowToast}
         />
       )}
 
@@ -457,6 +476,7 @@ export default function App() {
           onOpenModal={(type) => setActiveModal(type)}
           onToggleTaskCleaned={handleToggleTaskCleaned}
           onDeleteCleaningTask={handleDeleteCleaningTask}
+          onShowToast={handleShowToast}
         />
       )}
 
@@ -481,6 +501,7 @@ export default function App() {
         isOpen={isTelegramModalOpen}
         onClose={() => setIsTelegramModalOpen(false)}
         onSaved={handleSaveTelegramConfig}
+        onShowToast={handleShowToast}
       />
 
       <PresenceModal
@@ -489,6 +510,7 @@ export default function App() {
         activeRoommate={activeRoommateObj}
         presenceState={presenceState}
         onSavePresence={handleSavePresence}
+        onShowToast={handleShowToast}
       />
 
       <AddEventModal
@@ -504,6 +526,7 @@ export default function App() {
         bills={bills}
         expenses={expenses}
         roommates={roommates}
+        onShowToast={handleShowToast}
       />
 
       <PinSecurityModal
@@ -557,6 +580,9 @@ export default function App() {
         settlements={settlements}
         onSettleUp={handleSettleUp}
       />
+
+      {/* In-App Floating Toast Notification */}
+      <ToastNotification toast={toast} onClose={() => setToast(null)} />
 
     </div>
   );

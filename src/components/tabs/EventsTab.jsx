@@ -1,12 +1,13 @@
 import React from 'react';
-import { Calendar, Plus, Clock, Send, Trash2, CheckCircle2, Wrench, Sparkles, Shield, Package } from 'lucide-react';
+import { Calendar, Plus, Clock, Send, Trash2 } from 'lucide-react';
 import { sendTelegramMessage } from '../../lib/telegram';
 
 export default function EventsTab({
   roommates,
   events,
   onOpenModal,
-  onDeleteEvent
+  onDeleteEvent,
+  onShowToast
 }) {
   const sortedEvents = [...events].sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
 
@@ -28,7 +29,13 @@ export default function EventsTab({
       text += `📝 *Notes*: ${event.notes}\n`;
     }
 
-    await sendTelegramMessage(text);
+    const result = await sendTelegramMessage(text);
+    if (onShowToast) {
+      onShowToast({
+        type: result.success ? 'success' : 'error',
+        message: result.success ? result.message : result.error
+      });
+    }
   };
 
   const getCategoryBadge = (cat) => {
