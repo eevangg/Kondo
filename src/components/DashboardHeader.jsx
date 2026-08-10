@@ -12,7 +12,7 @@ export default function DashboardHeader({
   onOpenModal
 }) {
   const r1 = roommates[0] || { id: 'r1', name: 'Andre' };
-  const r2 = roommates[1] || { id: 'r2', name: 'Molina' };
+  const r2 = roommates[1] || { id: 'r2', name: 'Gerard' };
 
   let r1PaidTotal = 0;
   let r2PaidTotal = 0;
@@ -20,9 +20,9 @@ export default function DashboardHeader({
   expenses.forEach((exp) => {
     const amt = Number(exp.amount) || 0;
     if (exp.paid_by === r1.id) {
-      r1PaidTotal += amt / 2;
+      r1PaidTotal += exp.split_type === 'full' ? amt : amt / 2;
     } else if (exp.paid_by === r2.id) {
-      r2PaidTotal += amt / 2;
+      r2PaidTotal += exp.split_type === 'full' ? amt : amt / 2;
     }
   });
 
@@ -154,7 +154,7 @@ export default function DashboardHeader({
 
       </div>
 
-      {/* Quick Action Button Bar with Parent Sheet Button */}
+      {/* Quick Action Button Bar */}
       <div className="glass-card" style={{ padding: '0.85rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
         <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Quick Actions:

@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import { X, ArrowUpRight, Check } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { CURRENCY_SYMBOL } from '../../lib/defaultData';
 
 export default function SettleUpModal({ isOpen, onClose, roommates, expenses, settlements, onSettleUp }) {
-  const r1 = roommates[0] || { id: 'r1', name: 'Alex' };
-  const r2 = roommates[1] || { id: 'r2', name: 'Sam' };
+  const r1 = roommates[0] || { id: 'r1', name: 'Andre' };
+  const r2 = roommates[1] || { id: 'r2', name: 'Gerard' };
 
   let r1PaidTotal = 0;
   let r2PaidTotal = 0;
 
   expenses.forEach((exp) => {
     const amt = Number(exp.amount) || 0;
-    if (exp.paid_by === r1.id) r1PaidTotal += amt / 2;
-    else if (exp.paid_by === r2.id) r2PaidTotal += amt / 2;
+    if (exp.paid_by === r1.id) {
+      r1PaidTotal += exp.split_type === 'full' ? amt : amt / 2;
+    } else if (exp.paid_by === r2.id) {
+      r2PaidTotal += exp.split_type === 'full' ? amt : amt / 2;
+    }
   });
 
   settlements.forEach((s) => {
@@ -29,7 +33,7 @@ export default function SettleUpModal({ isOpen, onClose, roommates, expenses, se
   const [payerId, setPayerId] = useState(defaultPayerId);
   const [payeeId, setPayeeId] = useState(defaultPayeeId);
   const [amount, setAmount] = useState(suggestedAmount);
-  const [note, setNote] = useState('Settled shared balance via Venmo/Zelle');
+  const [note, setNote] = useState('Settled shared balance via GCash / Maya');
 
   if (!isOpen) return null;
 
@@ -67,8 +71,8 @@ export default function SettleUpModal({ isOpen, onClose, roommates, expenses, se
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.85rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-glass)', fontSize: '0.85rem' }}>
-            Current Calculated Owed Balance: <strong style={{ color: 'var(--status-success)' }}>${suggestedAmount}</strong>
+          <div className="sub-card" style={{ fontSize: '0.85rem' }}>
+            Current Calculated Owed Balance: <strong style={{ color: 'var(--status-success)' }}>{CURRENCY_SYMBOL}{suggestedAmount}</strong>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
@@ -92,7 +96,7 @@ export default function SettleUpModal({ isOpen, onClose, roommates, expenses, se
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>Settlement Amount ($)</label>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>Settlement Amount ({CURRENCY_SYMBOL})</label>
             <input
               type="number"
               step="0.01"

@@ -2,7 +2,7 @@ export const CURRENCY_SYMBOL = '₱';
 
 export const INITIAL_ROOMMATES = [
   { id: 'r1', name: 'Andre', avatar_color: '#6366f1', initials: 'AN', pin: '1234' },
-  { id: 'r2', name: 'Molina', avatar_color: '#06b6d4', initials: 'ML', pin: '5678' }
+  { id: 'r2', name: 'Gerard', avatar_color: '#06b6d4', initials: 'GR', pin: '5678' }
 ];
 
 export const INITIAL_BILLS = [
@@ -16,7 +16,7 @@ export const INITIAL_BILLS = [
     is_paid: false,
     is_recurring: true,
     recurrence_interval: 'Monthly',
-    status: 'Due', // Due -> Sent to Parents -> Paid by Parents
+    status: 'Due',
     remarks: 'Monthly condo rent'
   },
   {
@@ -63,6 +63,15 @@ export const INITIAL_BILLS = [
 export const INITIAL_EXPENSES = [
   {
     id: 'e1',
+    description: 'Coffee for both of us',
+    amount: 130.00,
+    paid_by: 'r1',
+    category: 'Groceries',
+    split_type: 'full', // 'full' = 100% owed by Gerard, 'equal' = 50/50 split
+    expense_date: '2026-08-10'
+  },
+  {
+    id: 'e2',
     description: 'Weekly Grocery Shopping',
     amount: 3450.00,
     paid_by: 'r1',
@@ -71,7 +80,7 @@ export const INITIAL_EXPENSES = [
     expense_date: '2026-08-08'
   },
   {
-    id: 'e2',
+    id: 'e3',
     description: 'Drinking Water Refill (5 Gallons)',
     amount: 350.00,
     paid_by: 'r2',

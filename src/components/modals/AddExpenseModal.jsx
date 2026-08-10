@@ -6,9 +6,12 @@ export default function AddExpenseModal({ isOpen, onClose, roommates, activeRoom
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('Groceries');
   const [paidBy, setPaidBy] = useState(activeRoommateId);
-  const [splitType, setSplitType] = useState('equal');
+  const [splitType, setSplitType] = useState('equal'); // 'equal' (50/50) or 'full' (100% owed to payer)
 
   if (!isOpen) return null;
+
+  const payerObj = roommates.find((r) => r.id === paidBy) || roommates[0];
+  const roommateObj = roommates.find((r) => r.id !== paidBy) || roommates[1];
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -25,6 +28,7 @@ export default function AddExpenseModal({ isOpen, onClose, roommates, activeRoom
 
     setDescription('');
     setAmount('');
+    setSplitType('equal');
     onClose();
   };
 
@@ -47,7 +51,7 @@ export default function AddExpenseModal({ isOpen, onClose, roommates, activeRoom
             <input
               type="text"
               className="glass-input"
-              placeholder="e.g. Trader Joe's Groceries, Toiletries"
+              placeholder="e.g. Coffee for both of us, Groceries, Toiletries"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
@@ -55,7 +59,7 @@ export default function AddExpenseModal({ isOpen, onClose, roommates, activeRoom
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>Total Amount ($)</label>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>Total Amount (₱)</label>
             <input
               type="number"
               step="0.01"
@@ -75,7 +79,7 @@ export default function AddExpenseModal({ isOpen, onClose, roommates, activeRoom
                 <option value="Household">Household Supplies</option>
                 <option value="Utilities">Utilities</option>
                 <option value="Maintenance">Maintenance</option>
-                <option value="Entertainment">Entertainment</option>
+                <option value="Dining & Coffee">Dining & Coffee</option>
               </select>
             </div>
 
@@ -90,17 +94,30 @@ export default function AddExpenseModal({ isOpen, onClose, roommates, activeRoom
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>Split Method</label>
+            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>Expense Split Option</label>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
                 type="button"
                 className={`btn btn-sm ${splitType === 'equal' ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={() => setSplitType('equal')}
-                style={{ flex: 1 }}
+                style={{ flex: 1, fontSize: '0.78rem' }}
               >
-                Equal 50/50
+                Equal 50/50 Split
+              </button>
+              <button
+                type="button"
+                className={`btn btn-sm ${splitType === 'full' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setSplitType('full')}
+                style={{ flex: 1, fontSize: '0.78rem' }}
+              >
+                100% Owed to {payerObj.name}
               </button>
             </div>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+              {splitType === 'equal'
+                ? `Split 50/50: Each person pays 50% of the cost.`
+                : `100% Owed: ${payerObj.name} paid, so ${roommateObj.name} owes ${payerObj.name} the full amount.`}
+            </p>
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>

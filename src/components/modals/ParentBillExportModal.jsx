@@ -4,26 +4,24 @@ import { CURRENCY_SYMBOL } from '../../lib/defaultData';
 
 export default function ParentBillExportModal({ isOpen, onClose, bills, expenses, roommates }) {
   const [copied, setCopied] = useState(false);
-  const [creditAdjustment, setCreditAdjustment] = useState(15699.49); // Optional credit adjustment to Andre
+  const [creditAdjustment, setCreditAdjustment] = useState(15699.49);
 
   if (!isOpen) return null;
 
   const r1 = roommates[0] || { name: 'Andre' };
-  const r2 = roommates[1] || { name: 'Molina' };
+  const r2 = roommates[1] || { name: 'Gerard' };
 
-  // Group bills into Monthly Dues vs Utilities
   const monthlyDuesBills = bills.filter((b) => b.category === 'Monthly Dues' || b.title.toLowerCase().includes('rent') || b.title.toLowerCase().includes('association'));
   const utilityBills = bills.filter((b) => b.category === 'Utilities' || b.title.toLowerCase().includes('electric') || b.title.toLowerCase().includes('internet'));
 
   const duesTotal = monthlyDuesBills.reduce((sum, b) => sum + Number(b.amount || 0), 0);
-  const duesMolina = duesTotal / 2;
+  const duesGerard = duesTotal / 2;
 
   const utilitiesTotal = utilityBills.reduce((sum, b) => sum + Number(b.amount || 0), 0);
-  const utilitiesMolina = utilitiesTotal / 2;
+  const utilitiesGerard = utilitiesTotal / 2;
 
-  const grandTotalMolina = duesMolina + utilitiesMolina;
+  const grandTotalGerard = duesGerard + utilitiesGerard;
 
-  // Format Telegram Text Summary
   const generateTelegramText = () => {
     let text = `📋 *HOUSEHOLD BILLS STATEMENT*\n`;
     text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
@@ -32,19 +30,19 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
     monthlyDuesBills.forEach((b) => {
       text += `• ${b.title}: ${CURRENCY_SYMBOL}${Number(b.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} (${r2.name}: ${CURRENCY_SYMBOL}${(b.amount / 2).toLocaleString('en-US', { minimumFractionDigits: 2 })})\n`;
     });
-    text += `👉 *Subtotal ${r2.name}: ${CURRENCY_SYMBOL}${duesMolina.toLocaleString('en-US', { minimumFractionDigits: 2 })}*\n\n`;
+    text += `👉 *Subtotal ${r2.name}: ${CURRENCY_SYMBOL}${duesGerard.toLocaleString('en-US', { minimumFractionDigits: 2 })}*\n\n`;
 
     text += `*UTILITIES*\n`;
     utilityBills.forEach((b) => {
       text += `• ${b.title}: ${CURRENCY_SYMBOL}${Number(b.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })} (${r2.name}: ${CURRENCY_SYMBOL}${(b.amount / 2).toLocaleString('en-US', { minimumFractionDigits: 2 })})\n`;
     });
-    text += `👉 *Subtotal ${r2.name}: ${CURRENCY_SYMBOL}${utilitiesMolina.toLocaleString('en-US', { minimumFractionDigits: 2 })}*\n\n`;
+    text += `👉 *Subtotal ${r2.name}: ${CURRENCY_SYMBOL}${utilitiesGerard.toLocaleString('en-US', { minimumFractionDigits: 2 })}*\n\n`;
 
     if (creditAdjustment > 0) {
       text += `💳 *Credit to ${r1.name} for Bills Payment*: ${CURRENCY_SYMBOL}${creditAdjustment.toLocaleString('en-US', { minimumFractionDigits: 2 })}\n\n`;
     }
 
-    text += `✅ *GRAND TOTAL (${r2.name}'s Share): ${CURRENCY_SYMBOL}${grandTotalMolina.toLocaleString('en-US', { minimumFractionDigits: 2 })}*`;
+    text += `✅ *GRAND TOTAL (${r2.name}'s Share): ${CURRENCY_SYMBOL}${grandTotalGerard.toLocaleString('en-US', { minimumFractionDigits: 2 })}*`;
 
     return text;
   };
@@ -104,7 +102,7 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
               <tr style={{ fontWeight: 'bold', fontStyle: 'italic' }}>
                 <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>Subtotal</td>
                 <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{duesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{duesMolina.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{duesGerard.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td style={{ padding: '6px 12px', border: '1px solid #ccc' }}></td>
               </tr>
 
@@ -123,7 +121,7 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
               <tr style={{ fontWeight: 'bold', fontStyle: 'italic' }}>
                 <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>Subtotal</td>
                 <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{utilitiesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{utilitiesMolina.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{utilitiesGerard.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td style={{ padding: '6px 12px', border: '1px solid #ccc' }}></td>
               </tr>
 
@@ -139,7 +137,7 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
               <tr style={{ background: '#15803d', color: '#ffffff', fontWeight: 'bold', fontSize: '1.05rem' }}>
                 <td style={{ padding: '8px 12px', border: '1px solid #ccc' }}>GRAND TOTAL</td>
                 <td style={{ padding: '8px 12px', border: '1px solid #ccc' }}></td>
-                <td style={{ padding: '8px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{grandTotalMolina.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{grandTotalGerard.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td style={{ padding: '8px 12px', border: '1px solid #ccc' }}></td>
               </tr>
 

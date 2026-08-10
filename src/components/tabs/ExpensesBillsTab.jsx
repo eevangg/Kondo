@@ -16,7 +16,7 @@ export default function ExpensesBillsTab({
   const [subTab, setSubTab] = useState('expenses');
 
   const r1 = roommates[0] || { id: 'r1', name: 'Andre' };
-  const r2 = roommates[1] || { id: 'r2', name: 'Molina' };
+  const r2 = roommates[1] || { id: 'r2', name: 'Gerard' };
 
   let r1PaidTotal = 0;
   let r2PaidTotal = 0;
@@ -24,9 +24,9 @@ export default function ExpensesBillsTab({
   expenses.forEach((exp) => {
     const amt = Number(exp.amount) || 0;
     if (exp.paid_by === r1.id) {
-      r1PaidTotal += amt / 2;
+      r1PaidTotal += exp.split_type === 'full' ? amt : amt / 2;
     } else if (exp.paid_by === r2.id) {
-      r2PaidTotal += amt / 2;
+      r2PaidTotal += exp.split_type === 'full' ? amt : amt / 2;
     }
   });
 
@@ -126,7 +126,7 @@ export default function ExpensesBillsTab({
                   <tr style={{ borderBottom: '1px solid var(--border-glass)', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                     <th style={{ padding: '0.75rem' }}>Date</th>
                     <th style={{ padding: '0.75rem' }}>Description</th>
-                    <th style={{ padding: '0.75rem' }}>Category</th>
+                    <th style={{ padding: '0.75rem' }}>Split Type</th>
                     <th style={{ padding: '0.75rem' }}>Paid By</th>
                     <th style={{ padding: '0.75rem', textAlign: 'right' }}>Total Cost</th>
                     <th style={{ padding: '0.75rem', textAlign: 'right' }}>Action</th>
@@ -135,12 +135,16 @@ export default function ExpensesBillsTab({
                 <tbody>
                   {expenses.map((exp) => {
                     const payer = roommates.find((r) => r.id === exp.paid_by) || { name: 'Unknown', avatar_color: '#9ca3af' };
+                    const isFullOwed = exp.split_type === 'full';
+
                     return (
                       <tr key={exp.id} style={{ borderBottom: '1px solid var(--border-glass)' }}>
                         <td style={{ padding: '0.75rem', color: 'var(--text-muted)' }}>{exp.expense_date}</td>
                         <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--text-main)' }}>{exp.description}</td>
                         <td style={{ padding: '0.75rem' }}>
-                          <span className="badge badge-purple">{exp.category}</span>
+                          <span className={`badge ${isFullOwed ? 'badge-warning' : 'badge-purple'}`}>
+                            {isFullOwed ? '100% Owed' : '50/50 Split'}
+                          </span>
                         </td>
                         <td style={{ padding: '0.75rem', fontWeight: 600, color: payer.avatar_color }}>
                           {payer.name}
