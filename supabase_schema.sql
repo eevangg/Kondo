@@ -1,4 +1,4 @@
--- HomeSync Supabase Schema Migration (Updated with Live Condo Data)
+-- HomeSync Supabase Schema Migration (Updated with Live Condo Data & Realtime Support)
 -- Copy & Run this SQL in your Supabase SQL Editor (https://app.supabase.com/project/_/sql)
 
 -- 1. Roommates Table
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS bills (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Clear old dummy bills & seed live bills (Only Assoc Dues + Water and Electricity credited to Andre)
+-- Clear old dummy bills & seed live bills
 DELETE FROM bills;
 INSERT INTO bills (id, title, amount, due_date, category, paid_by, is_paid, is_recurring, recurrence_interval, status, remarks)
 VALUES
@@ -197,3 +197,7 @@ CREATE POLICY "Allow public read/write access to HomeSync maintenance" ON mainte
 
 DROP POLICY IF EXISTS "Allow public read/write access to HomeSync presence" ON presence;
 CREATE POLICY "Allow public read/write access to HomeSync presence" ON presence FOR ALL USING (true) WITH CHECK (true);
+
+-- Enable Supabase Realtime Broadcasting for all HomeSync tables
+DROP PUBLICATION IF EXISTS supabase_realtime;
+CREATE PUBLICATION supabase_realtime FOR TABLE roommates, bills, expenses, settlements, events, pantry_items, shopping_items, cleaning_tasks, maintenance_issues, presence;
