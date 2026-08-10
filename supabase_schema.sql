@@ -167,13 +167,33 @@ ALTER TABLE cleaning_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE maintenance_issues ENABLE ROW LEVEL SECURITY;
 ALTER TABLE presence ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies first so re-running never throws policy already exists error
+DROP POLICY IF EXISTS "Allow public read/write access to HomeSync data" ON roommates;
 CREATE POLICY "Allow public read/write access to HomeSync data" ON roommates FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read/write access to HomeSync bills" ON bills;
 CREATE POLICY "Allow public read/write access to HomeSync bills" ON bills FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read/write access to HomeSync expenses" ON expenses;
 CREATE POLICY "Allow public read/write access to HomeSync expenses" ON expenses FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read/write access to HomeSync settlements" ON settlements;
 CREATE POLICY "Allow public read/write access to HomeSync settlements" ON settlements FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read/write access to HomeSync events" ON events;
 CREATE POLICY "Allow public read/write access to HomeSync events" ON events FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read/write access to HomeSync pantry" ON pantry_items;
 CREATE POLICY "Allow public read/write access to HomeSync pantry" ON pantry_items FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read/write access to HomeSync shopping" ON shopping_items;
 CREATE POLICY "Allow public read/write access to HomeSync shopping" ON shopping_items FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read/write access to HomeSync cleaning" ON cleaning_tasks;
 CREATE POLICY "Allow public read/write access to HomeSync cleaning" ON cleaning_tasks FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read/write access to HomeSync maintenance" ON maintenance_issues;
 CREATE POLICY "Allow public read/write access to HomeSync maintenance" ON maintenance_issues FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public read/write access to HomeSync presence" ON presence;
 CREATE POLICY "Allow public read/write access to HomeSync presence" ON presence FOR ALL USING (true) WITH CHECK (true);
