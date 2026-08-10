@@ -42,7 +42,7 @@ DELETE FROM bills;
 INSERT INTO bills (id, title, amount, due_date, category, paid_by, is_paid, is_recurring, recurrence_interval, status, remarks)
 VALUES
   ('b1', 'Monthly Rent', 16000.00, '2026-09-01', 'Monthly Dues', NULL, FALSE, TRUE, 'Monthly', 'Due', 'Monthly condo rent (Due 1st of month)'),
-  ('b2', 'Converge Fiber Internet', 1500.00, '2026-09-01', 'Utilities', NULL, FALSE, TRUE, 'Monthly', 'Due', 'Converge high-speed internet (Due 1st of month)'),
+  ('b2', 'Converge Internet', 1500.00, '2026-09-01', 'Utilities', NULL, FALSE, TRUE, 'Monthly', 'Due', 'Converge internet bill (Due 1st of month)'),
   ('b3', 'Electricity (Meralco - June & July)', 10522.63, '2026-07-27', 'Utilities', 'r1', FALSE, TRUE, 'Monthly', 'Overdue', 'Meralco electric bill (Due 27th of month - Overdue)'),
   ('b4', 'Association Dues + Water', 2562.80, '2026-08-30', 'Monthly Dues', 'r1', FALSE, TRUE, 'Monthly', 'Due', 'Building dues & water utility (Due 30th of month)');
 

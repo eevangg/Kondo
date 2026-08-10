@@ -23,7 +23,7 @@ export const INITIAL_BILLS = [
   },
   {
     id: 'b2',
-    title: 'Converge Fiber Internet',
+    title: 'Converge Internet',
     amount: 1500.00,
     due_date: '2026-09-01',
     category: 'Utilities',
@@ -32,7 +32,7 @@ export const INITIAL_BILLS = [
     is_recurring: true,
     recurrence_interval: 'Monthly',
     status: 'Due',
-    remarks: 'Converge high-speed internet (Due 1st of month)'
+    remarks: 'Converge internet bill (Due 1st of month)'
   },
   {
     id: 'b3',
