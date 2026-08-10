@@ -24,6 +24,7 @@ import AddEventModal from './components/modals/AddEventModal';
 import TelegramConfigModal from './components/modals/TelegramConfigModal';
 
 import {
+  CURRENCY_SYMBOL,
   INITIAL_ROOMMATES,
   INITIAL_EVENTS,
   INITIAL_BILLS,
@@ -35,7 +36,7 @@ import {
   INITIAL_MAINTENANCE
 } from './lib/defaultData';
 import { supabase, isSupabaseConnected, getSupabaseCredentials } from './lib/supabase';
-import { getTelegramCredentials } from './lib/telegram';
+import { getTelegramCredentials, sendTelegramMessage } from './lib/telegram';
 import { LayoutDashboard, Receipt, ShoppingBag, Sparkles, Wrench, Calendar as CalendarIcon } from 'lucide-react';
 
 export default function App() {
@@ -225,18 +226,57 @@ export default function App() {
     setBills((prev) => prev.filter((b) => b.id !== id));
   };
 
-  const handleAddExpense = (newExp) => {
+  // Expense Log Handler with Automated Instant Telegram Alert
+  const handleAddExpense = async (newExp) => {
     const item = { ...newExp, id: 'e_' + Date.now() };
     setExpenses((prev) => [item, ...prev]);
-    handleShowToast({ type: 'success', message: 'Expense logged successfully!' });
+
+    // Send instant Telegram notification
+    const payer = roommates.find((r) => r.id === newExp.paid_by) || { name: 'Roommate' };
+    const isFullOwed = newExp.split_type === 'full';
+    
+    let text = `💸 *HOMESYNC NEW EXPENSE LOGGED*\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    text += `📌 *Description*: ${newExp.description}\n`;
+    text += `💰 *Total Cost*: ${CURRENCY_SYMBOL}${Number(newExp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}\n`;
+    text += `🏷️ *Category*: ${newExp.category}\n`;
+    text += `👤 *Paid By*: ${payer.name}\n`;
+    text += `📊 *Split Type*: ${isFullOwed ? `100% Owed to ${payer.name}` : 'Equal 50/50 Split'}\n`;
+    text += `📅 *Date*: ${newExp.expense_date}\n`;
+
+    const result = await sendTelegramMessage(text);
+    if (result.success) {
+      handleShowToast({ type: 'success', message: 'Expense logged & sent to Telegram!' });
+    } else {
+      handleShowToast({ type: 'success', message: 'Expense logged locally!' });
+    }
   };
+
   const handleDeleteExpense = (id) => {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
   };
-  const handleSettleUp = (newSettlement) => {
+
+  // Settle Up Handler with Automated Telegram Alert
+  const handleSettleUp = async (newSettlement) => {
     const item = { ...newSettlement, id: 's_' + Date.now(), settled_at: new Date().toISOString() };
     setSettlements((prev) => [item, ...prev]);
-    handleShowToast({ type: 'success', message: 'Settlement recorded!' });
+
+    const payer = roommates.find((r) => r.id === newSettlement.payer_id) || { name: 'Payer' };
+    const payee = roommates.find((r) => r.id === newSettlement.payee_id) || { name: 'Payee' };
+
+    let text = `🤝 *HOMESYNC BALANCE SETTLED*\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    text += `👤 *Payer*: ${payer.name}\n`;
+    text += `👤 *Payee*: ${payee.name}\n`;
+    text += `💰 *Amount Settled*: ${CURRENCY_SYMBOL}${Number(newSettlement.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}\n`;
+    if (newSettlement.note) text += `📝 *Note*: ${newSettlement.note}\n`;
+
+    const result = await sendTelegramMessage(text);
+    if (result.success) {
+      handleShowToast({ type: 'success', message: 'Settlement recorded & sent to Telegram!' });
+    } else {
+      handleShowToast({ type: 'success', message: 'Settlement recorded!' });
+    }
   };
 
   const handleAddPantryItem = (newItem) => {
