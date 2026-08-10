@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { X, Share2, Copy, Check, FileSpreadsheet, Send } from 'lucide-react';
 import { CURRENCY_SYMBOL } from '../../lib/defaultData';
+import { sendTelegramMessage } from '../../lib/telegram';
 
 export default function ParentBillExportModal({ isOpen, onClose, bills, expenses, roommates }) {
   const [copied, setCopied] = useState(false);
+  const [sending, setSending] = useState(false);
   const [creditAdjustment, setCreditAdjustment] = useState(15699.49);
 
   if (!isOpen) return null;
@@ -47,11 +49,11 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
     return text;
   };
 
-  const handleCopyTelegram = () => {
+  const handleSendTelegram = async () => {
     const text = generateTelegramText();
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    setSending(true);
+    await sendTelegramMessage(text);
+    setSending(false);
   };
 
   return (
@@ -70,7 +72,7 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
         </div>
 
         <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          Formatted spreadsheet view matching your household parent statement. Ready to copy for <strong>Telegram</strong>!
+          Formatted spreadsheet view matching your household parent statement. Ready to send to <strong>Telegram</strong>!
         </p>
 
         {/* Tabulated Spreadsheet Table Container */}
@@ -151,9 +153,9 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
           <button type="button" onClick={onClose} className="btn btn-secondary">
             Close
           </button>
-          <button type="button" onClick={handleCopyTelegram} className="btn btn-primary" style={{ gap: '0.5rem' }}>
-            {copied ? <Check size={16} color="#10b981" /> : <Send size={16} />}
-            {copied ? 'Copied Telegram Summary!' : 'Copy Summary for Telegram'}
+          <button type="button" onClick={handleSendTelegram} disabled={sending} className="btn btn-primary" style={{ gap: '0.5rem' }}>
+            <Send size={16} />
+            {sending ? 'Sending to Telegram...' : 'Send Statement to Telegram'}
           </button>
         </div>
 

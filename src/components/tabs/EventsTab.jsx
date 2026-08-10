@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, Plus, Clock, Send, Trash2, CheckCircle2, Wrench, Sparkles, Shield, Package } from 'lucide-react';
+import { sendTelegramMessage } from '../../lib/telegram';
 
 export default function EventsTab({
   roommates,
@@ -9,7 +10,7 @@ export default function EventsTab({
 }) {
   const sortedEvents = [...events].sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
 
-  const handleShareEventTelegram = (event) => {
+  const handleShareEventTelegram = async (event) => {
     const formatted = new Date(event.event_date).toLocaleString(undefined, {
       weekday: 'short',
       month: 'short',
@@ -27,8 +28,7 @@ export default function EventsTab({
       text += `📝 *Notes*: ${event.notes}\n`;
     }
 
-    navigator.clipboard.writeText(text);
-    alert('Event details copied to clipboard for Telegram!');
+    await sendTelegramMessage(text);
   };
 
   const getCategoryBadge = (cat) => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Database, UserCheck, Sparkles, MapPin, Sun, Moon } from 'lucide-react';
+import { Home, Database, UserCheck, Sparkles, MapPin, Sun, Moon, Send } from 'lucide-react';
 
 export default function Navbar({
   roommates,
@@ -9,7 +9,9 @@ export default function Navbar({
   theme,
   onToggleTheme,
   isSupabaseConnected,
+  isTelegramConnected,
   onOpenConfigModal,
+  onOpenTelegramModal,
   onOpenPresenceModal
 }) {
   const activeRoommate = roommates.find((r) => r.id === activeRoommateId) || roommates[0];
@@ -25,7 +27,6 @@ export default function Navbar({
     });
   }
 
-  // Only Andre (r1) sees the Supabase Database configuration button
   const isAdminAndre = activeRoommateId === 'r1' || activeRoommate.name === 'Andre';
 
   return (
@@ -78,6 +79,26 @@ export default function Navbar({
                 ({returnSubtext})
               </span>
             )}
+          </button>
+
+          {/* Telegram Bot Config Button */}
+          <button
+            onClick={onOpenTelegramModal}
+            className="btn btn-secondary btn-sm"
+            title="Configure Telegram Bot Settings"
+            style={{ fontSize: '0.8rem', gap: '0.4rem' }}
+          >
+            <Send size={15} color={isTelegramConnected ? '#06b6d4' : 'var(--text-muted)'} />
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              {isTelegramConnected ? (
+                <>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#06b6d4' }} />
+                  Telegram Bot Active
+                </>
+              ) : (
+                'Telegram Bot Setup'
+              )}
+            </span>
           </button>
 
           {/* Light / Dark Mode Toggle */}

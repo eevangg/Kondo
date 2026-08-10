@@ -20,6 +20,7 @@ import ParentBillExportModal from './components/modals/ParentBillExportModal';
 import PinSecurityModal from './components/modals/PinSecurityModal';
 import PresenceModal from './components/modals/PresenceModal';
 import AddEventModal from './components/modals/AddEventModal';
+import TelegramConfigModal from './components/modals/TelegramConfigModal';
 
 import {
   INITIAL_ROOMMATES,
@@ -33,13 +34,16 @@ import {
   INITIAL_MAINTENANCE
 } from './lib/defaultData';
 import { supabase, isSupabaseConnected, getSupabaseCredentials } from './lib/supabase';
+import { getTelegramCredentials } from './lib/telegram';
 import { LayoutDashboard, Receipt, ShoppingBag, Sparkles, Wrench, Calendar as CalendarIcon } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('overview');
   const [activeRoommateId, setActiveRoommateId] = useState('r1');
   const [dbConnected, setDbConnected] = useState(isSupabaseConnected);
+  const [telegramConnected, setTelegramConnected] = useState(() => getTelegramCredentials().isConfigured);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [isTelegramModalOpen, setIsTelegramModalOpen] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
 
   // Light / Dark Theme State
@@ -132,7 +136,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem('homesync_cleaning', JSON.stringify(cleaningTasks)); }, [cleaningTasks]);
   useEffect(() => { localStorage.setItem('homesync_maintenance', JSON.stringify(maintenanceIssues)); }, [maintenanceIssues]);
 
-  // Automatic Presence Timer: Auto-reverts 'Away' to 'At Condo' when scheduled return_time passes
+  // Automatic Presence Timer
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
@@ -193,6 +197,10 @@ export default function App() {
   const handleSaveSupabaseConfig = (url, key) => {
     const creds = getSupabaseCredentials();
     setDbConnected(creds.isConfigured);
+  };
+
+  const handleSaveTelegramConfig = () => {
+    setTelegramConnected(getTelegramCredentials().isConfigured);
   };
 
   const handleAddBill = (newBill) => {
@@ -323,7 +331,9 @@ export default function App() {
         theme={theme}
         onToggleTheme={handleToggleTheme}
         isSupabaseConnected={dbConnected}
+        isTelegramConnected={telegramConnected}
         onOpenConfigModal={() => setIsConfigModalOpen(true)}
+        onOpenTelegramModal={() => setIsTelegramModalOpen(true)}
         onOpenPresenceModal={() => setIsPresenceModalOpen(true)}
       />
 
@@ -465,6 +475,12 @@ export default function App() {
         isOpen={isConfigModalOpen}
         onClose={() => setIsConfigModalOpen(false)}
         onSave={handleSaveSupabaseConfig}
+      />
+
+      <TelegramConfigModal
+        isOpen={isTelegramModalOpen}
+        onClose={() => setIsTelegramModalOpen(false)}
+        onSaved={handleSaveTelegramConfig}
       />
 
       <PresenceModal
