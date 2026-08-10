@@ -1,14 +1,27 @@
 import React from 'react';
-import { Home, Database, UserCheck, Sparkles, RefreshCw } from 'lucide-react';
+import { Home, Database, UserCheck, Sparkles, MapPin } from 'lucide-react';
 
 export default function Navbar({
   roommates,
   activeRoommateId,
   setActiveRoommateId,
+  presenceState,
   isSupabaseConnected,
-  onOpenConfigModal
+  onOpenConfigModal,
+  onOpenPresenceModal
 }) {
   const activeRoommate = roommates.find((r) => r.id === activeRoommateId) || roommates[0];
+  const presence = presenceState[activeRoommate.id] || { status: 'At Condo', return_time: null };
+  const isAway = presence.status === 'Away';
+
+  let returnSubtext = '';
+  if (isAway && presence.return_time) {
+    returnSubtext = new Date(presence.return_time).toLocaleString(undefined, {
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
 
   return (
     <header className="glass-card" style={{ borderRadius: '0 0 20px 20px', padding: '1rem 1.5rem', marginBottom: '1.5rem' }}>
@@ -43,8 +56,8 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Right Section: Database Status & Active Roommate Switcher */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {/* Right Section: Database Status, Presence Badge & Active Roommate Switcher */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap' }}>
           
           {/* Supabase Status Pill */}
           <button
@@ -67,6 +80,22 @@ export default function Navbar({
                 </>
               )}
             </span>
+          </button>
+
+          {/* Location Presence Status Button (Next to Name) */}
+          <button
+            onClick={onOpenPresenceModal}
+            className={`btn btn-sm ${isAway ? 'badge-danger' : 'badge-success'}`}
+            style={{ fontSize: '0.8rem', gap: '0.4rem', padding: '0.4rem 0.85rem' }}
+            title="Click to update presence status"
+          >
+            <MapPin size={14} />
+            <span>{isAway ? 'Away' : 'At Condo'}</span>
+            {returnSubtext && (
+              <span style={{ fontSize: '0.7rem', opacity: 0.8, marginLeft: '0.2rem' }}>
+                (Back {returnSubtext})
+              </span>
+            )}
           </button>
 
           {/* Active Roommate Selector */}

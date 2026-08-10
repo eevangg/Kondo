@@ -17,6 +17,7 @@ import AddMaintenanceModal from './components/modals/AddMaintenanceModal';
 import SettleUpModal from './components/modals/SettleUpModal';
 import ParentBillExportModal from './components/modals/ParentBillExportModal';
 import PinSecurityModal from './components/modals/PinSecurityModal';
+import PresenceModal from './components/modals/PresenceModal';
 
 import {
   INITIAL_ROOMMATES,
@@ -42,7 +43,19 @@ export default function App() {
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [pendingRoommateId, setPendingRoommateId] = useState(null);
 
+  // Presence Modal State
+  const [isPresenceModalOpen, setIsPresenceModalOpen] = useState(false);
+
   const [roommates, setRoommates] = useState(INITIAL_ROOMMATES);
+
+  // Presence State (At Condo / Away with optional return timestamp)
+  const [presenceState, setPresenceState] = useState(() => {
+    const saved = localStorage.getItem('homesync_presence');
+    return saved ? JSON.parse(saved) : {
+      r1: { status: 'At Condo', return_time: null },
+      r2: { status: 'At Condo', return_time: null }
+    };
+  });
 
   const [bills, setBills] = useState(() => {
     const saved = localStorage.getItem('homesync_bills');
@@ -85,6 +98,7 @@ export default function App() {
   });
 
   // LocalStorage Persistence
+  useEffect(() => { localStorage.setItem('homesync_presence', JSON.stringify(presenceState)); }, [presenceState]);
   useEffect(() => { localStorage.setItem('homesync_bills', JSON.stringify(bills)); }, [bills]);
   useEffect(() => { localStorage.setItem('homesync_expenses', JSON.stringify(expenses)); }, [expenses]);
   useEffect(() => { localStorage.setItem('homesync_settlements', JSON.stringify(settlements)); }, [settlements]);
@@ -93,6 +107,40 @@ export default function App() {
   useEffect(() => { localStorage.setItem('homesync_daily_routine', JSON.stringify(dailyRoutine)); }, [dailyRoutine]);
   useEffect(() => { localStorage.setItem('homesync_cleaning', JSON.stringify(cleaningTasks)); }, [cleaningTasks]);
   useEffect(() => { localStorage.setItem('homesync_maintenance', JSON.stringify(maintenanceIssues)); }, [maintenanceIssues]);
+
+  // Automatic Presence Timer: Auto-reverts 'Away' to 'At Condo' when scheduled return_time passes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      setPresenceState((prev) => {
+        let changed = false;
+        const nextState = { ...prev };
+
+        Object.keys(nextState).forEach((id) => {
+          const userPres = nextState[id];
+          if (userPres.status === 'Away' && userPres.return_time) {
+            const returnDate = new Date(userPres.return_time);
+            if (now >= returnDate) {
+              nextState[id] = { status: 'At Condo', return_time: null };
+              changed = true;
+            }
+          }
+        });
+
+        return changed ? nextState : prev;
+      });
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Presence Save Handler
+  const handleSavePresence = (roommateId, newPresence) => {
+    setPresenceState((prev) => ({
+      ...prev,
+      [roommateId]: newPresence
+    }));
+  };
 
   // Handle Roommate Switch with PIN Prompt
   const handleRequestRoommateSwitch = (newId) => {
@@ -227,6 +275,8 @@ export default function App() {
     setMaintenanceIssues((prev) => prev.filter((m) => m.id !== id));
   };
 
+  const activeRoommateObj = roommates.find((r) => r.id === activeRoommateId) || roommates[0];
+
   return (
     <div className="app-container">
       
@@ -235,8 +285,10 @@ export default function App() {
         roommates={roommates}
         activeRoommateId={activeRoommateId}
         setActiveRoommateId={handleRequestRoommateSwitch}
+        presenceState={presenceState}
         isSupabaseConnected={dbConnected}
         onOpenConfigModal={() => setIsConfigModalOpen(true)}
+        onOpenPresenceModal={() => setIsPresenceModalOpen(true)}
       />
 
       {/* Executive Dashboard Header */}
@@ -359,6 +411,14 @@ export default function App() {
         isOpen={isConfigModalOpen}
         onClose={() => setIsConfigModalOpen(false)}
         onSave={handleSaveSupabaseConfig}
+      />
+
+      <PresenceModal
+        isOpen={isPresenceModalOpen}
+        onClose={() => setIsPresenceModalOpen(false)}
+        activeRoommate={activeRoommateObj}
+        presenceState={presenceState}
+        onSavePresence={handleSavePresence}
       />
 
       <ParentBillExportModal
