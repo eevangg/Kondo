@@ -20,14 +20,7 @@ export default function EventsTab({
       minute: '2-digit'
     });
 
-    let text = `📅 *UPCOMING HOUSEHOLD EVENT*\n`;
-    text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
-    text += `📌 *Event*: ${event.title}\n`;
-    text += `⏱️ *Date & Time*: ${formatted}\n`;
-    text += `🏷️ *Category*: ${event.category}\n`;
-    if (event.notes) {
-      text += `📝 *Notes*: ${event.notes}\n`;
-    }
+    const text = `📅 Scheduled: ${event.title} on ${formatted}`;
 
     const result = await sendTelegramMessage(text);
     if (onShowToast) {

@@ -23,23 +23,20 @@ export default function PresenceModal({ isOpen, onClose, activeRoommate, presenc
 
     onSavePresence(activeRoommate.id, finalPresence);
 
-    // Telegram Notification
-    let text = `🏠 *HOMESYNC PRESENCE UPDATE*\n`;
-    text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    // Simple Headerless Telegram Notification
+    let text = '';
     if (status === 'Away') {
-      text += `🔴 *${activeRoommate.name}* is currently *Away* from the condo.\n`;
+      let returnFormatted = '';
       if (finalPresence.return_time) {
-        const returnFormatted = new Date(finalPresence.return_time).toLocaleString(undefined, {
+        returnFormatted = ' (Expected back ' + new Date(finalPresence.return_time).toLocaleString(undefined, {
           weekday: 'short',
-          month: 'short',
-          day: 'numeric',
           hour: '2-digit',
           minute: '2-digit'
-        });
-        text += `⏱️ *Expected Return*: ${returnFormatted}\n`;
+        }) + ')';
       }
+      text = `🔴 ${activeRoommate.name} is now Away from the condo${returnFormatted}`;
     } else {
-      text += `🟢 *${activeRoommate.name}* is now *At Condo*!\n`;
+      text = `🟢 ${activeRoommate.name} is now At Condo!`;
     }
 
     const result = await sendTelegramMessage(text);
