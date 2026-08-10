@@ -458,8 +458,8 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      {/* Main Tab Navigation Bar */}
-      <div className="glass-card" style={{ padding: '0.5rem', marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
+      {/* Desktop Web Main Tab Navigation Bar (Hidden on Mobile & Tablet < 768px) */}
+      <div className="glass-card desktop-tab-nav" style={{ padding: '0.5rem', marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
         <button
           className={`btn ${activeTab === 'overview' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveTab('overview')}

@@ -204,7 +204,16 @@ body {
   }
 }
 
-/* Mobile Bottom Navigation Bar */
+/* Responsive Navigation Bar Rules */
+
+/* Mobile & Tablet (< 768px): Hide top horizontal tab bar below Navbar */
+@media (max-width: 768px) {
+  .desktop-tab-nav {
+    display: none !important;
+  }
+}
+
+/* Desktop Web (> 768px): Hide mobile bottom nav & FAB */
 .mobile-bottom-nav {
   display: none;
   position: fixed;
