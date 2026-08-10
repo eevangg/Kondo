@@ -80,6 +80,8 @@ export default function SettingsModal({
               </label>
               <input
                 type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 maxLength={6}
                 className="glass-input"
                 placeholder="••••••"
@@ -95,6 +97,8 @@ export default function SettingsModal({
               </label>
               <input
                 type="password"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 maxLength={6}
                 className="glass-input"
                 placeholder="••••••"

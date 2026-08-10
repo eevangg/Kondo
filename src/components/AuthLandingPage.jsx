@@ -150,6 +150,8 @@ export default function AuthLandingPage({ roommates, onLoginSuccess }) {
             </label>
             <input
               type="password"
+              inputMode="numeric"
+              pattern="[0-9]*"
               maxLength={6}
               autoFocus
               className="glass-input"
