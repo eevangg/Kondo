@@ -1,9 +1,11 @@
 import React from 'react';
-import { DollarSign, Calendar, ShoppingBag, Sparkles, CheckCircle2, AlertTriangle, Clock, ArrowRight, ShieldCheck } from 'lucide-react';
+import { DollarSign, Calendar, ShoppingBag, Sparkles, CheckCircle2, AlertTriangle, Clock, ArrowRight, ShieldCheck, MapPin, UserX } from 'lucide-react';
 import { CURRENCY_SYMBOL } from '../../lib/defaultData';
 
 export default function OverviewTab({
   roommates,
+  activeRoommateId,
+  presenceState,
   bills,
   expenses,
   pantryItems,
@@ -18,9 +20,59 @@ export default function OverviewTab({
   const lowStockPantry = pantryItems.filter((p) => p.stock_level === 'Low' || p.stock_level === 'Out');
   const pendingMaintenance = maintenanceIssues.filter((m) => m.status !== 'Done');
 
+  // Roommate Away Check
+  const otherRoommate = roommates.find((r) => r.id !== activeRoommateId) || roommates[1];
+  const otherPresence = presenceState?.[otherRoommate?.id] || { status: 'At Condo', return_time: null };
+  const isOtherRoommateAway = otherPresence.status === 'Away';
+
+  let returnDateString = '';
+  if (isOtherRoommateAway && otherPresence.return_time) {
+    returnDateString = new Date(otherPresence.return_time).toLocaleString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
+      {/* CONDITIONAL WIDGET: Only appears if your roommate is AWAY */}
+      {isOtherRoommateAway && (
+        <div
+          className="glass-card"
+          style={{
+            padding: '1rem 1.25rem',
+            background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(245, 158, 11, 0.1))',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            animation: 'fadeIn 0.3s ease-out'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ padding: '0.5rem', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.2)' }}>
+              <UserX size={24} color="var(--status-danger)" />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span style={{ color: otherRoommate.avatar_color }}>{otherRoommate.name}</span> is currently Away
+              </h3>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                {returnDateString ? `Expected back: ${returnDateString}` : 'Away from the condo (No return time set)'}
+              </p>
+            </div>
+          </div>
+          <span className="badge badge-danger" style={{ fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}>
+            <MapPin size={12} /> Away
+          </span>
+        </div>
+      )}
+
       {/* 2-Column Split: Upcoming Action Cards */}
       <div className="grid-cols-2">
         

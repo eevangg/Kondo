@@ -58,9 +58,25 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* Right Section: Theme Toggle, Database Status, Presence Badge & Roommate Switcher */}
+        {/* Right Section: Clean Controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           
+          {/* Active User Presence Button */}
+          <button
+            onClick={onOpenPresenceModal}
+            className={`btn btn-sm ${isAway ? 'badge-danger' : 'btn-secondary'}`}
+            style={{ fontSize: '0.8rem', gap: '0.4rem', padding: '0.4rem 0.85rem' }}
+            title="Click to update your status"
+          >
+            <MapPin size={14} color={isAway ? 'var(--status-danger)' : 'var(--status-success)'} />
+            <span>{isAway ? 'My Status: Away' : 'My Status: At Condo'}</span>
+            {returnSubtext && (
+              <span style={{ fontSize: '0.7rem', opacity: 0.85, marginLeft: '0.2rem' }}>
+                ({returnSubtext})
+              </span>
+            )}
+          </button>
+
           {/* Light / Dark Mode Toggle */}
           <button
             onClick={onToggleTheme}
@@ -92,22 +108,6 @@ export default function Navbar({
                 </>
               )}
             </span>
-          </button>
-
-          {/* Location Presence Status Button (Next to Name) */}
-          <button
-            onClick={onOpenPresenceModal}
-            className={`btn btn-sm ${isAway ? 'badge-danger' : 'badge-success'}`}
-            style={{ fontSize: '0.8rem', gap: '0.4rem', padding: '0.4rem 0.85rem' }}
-            title="Click to update presence status"
-          >
-            <MapPin size={14} />
-            <span>{isAway ? 'Away' : 'At Condo'}</span>
-            {returnSubtext && (
-              <span style={{ fontSize: '0.7rem', opacity: 0.8, marginLeft: '0.2rem' }}>
-                (Back {returnSubtext})
-              </span>
-            )}
           </button>
 
           {/* Active Roommate Selector */}

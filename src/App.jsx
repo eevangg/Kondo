@@ -361,6 +361,8 @@ export default function App() {
       {activeTab === 'overview' && (
         <OverviewTab
           roommates={roommates}
+          activeRoommateId={activeRoommateId}
+          presenceState={presenceState}
           bills={bills}
           expenses={expenses}
           pantryItems={pantryItems}
