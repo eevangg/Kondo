@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ArrowUpRight, Check } from 'lucide-react';
+import { X, ArrowUpRight, Check, ArrowRightLeft } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { CURRENCY_SYMBOL } from '../../lib/defaultData';
 
@@ -37,6 +37,14 @@ export default function SettleUpModal({ isOpen, onClose, roommates, expenses, se
 
   if (!isOpen) return null;
 
+  const payer = roommates.find((r) => r.id === payerId) || r1;
+  const payee = roommates.find((r) => r.id === payeeId) || r2;
+
+  const handleSwapRoles = () => {
+    setPayerId(payeeId);
+    setPayeeId(payerId);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!amount || parseFloat(amount) <= 0) return;
@@ -72,27 +80,39 @@ export default function SettleUpModal({ isOpen, onClose, roommates, expenses, se
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div className="sub-card" style={{ fontSize: '0.85rem' }}>
-            Current Calculated Owed Balance: <strong style={{ color: 'var(--status-success)' }}>{CURRENCY_SYMBOL}{suggestedAmount}</strong>
+            Calculated Net Owed Balance: <strong style={{ color: 'var(--status-success)' }}>{CURRENCY_SYMBOL}{suggestedAmount}</strong>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>Payer (Who Paid?)</label>
-              <select className="glass-input" value={payerId} onChange={(e) => setPayerId(e.target.value)}>
-                {roommates.map((r) => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
-            </div>
+          {/* Single Swap Button & Role Indicator */}
+          <div className="sub-card" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center', background: 'var(--bg-glass-strong)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 700 }}>
+                  Payer (Sending)
+                </span>
+                <strong style={{ fontSize: '1.05rem', color: payer.avatar_color }}>{payer.name}</strong>
+              </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>Payee (Recipient)</label>
-              <select className="glass-input" value={payeeId} onChange={(e) => setPayeeId(e.target.value)}>
-                {roommates.map((r) => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
+              <button
+                type="button"
+                onClick={handleSwapRoles}
+                className="btn btn-secondary btn-sm"
+                style={{ borderRadius: '50%', width: '40px', height: '40px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                title="Click to swap Payer and Recipient"
+              >
+                <ArrowRightLeft size={18} color="var(--accent-primary)" />
+              </button>
+
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase', fontWeight: 700 }}>
+                  Recipient (Receiving)
+                </span>
+                <strong style={{ fontSize: '1.05rem', color: payee.avatar_color }}>{payee.name}</strong>
+              </div>
             </div>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+              *Click <ArrowRightLeft size={12} style={{ display: 'inline', margin: '0 2px' }} /> button to automatically swap who is paying whom.
+            </span>
           </div>
 
           <div>
