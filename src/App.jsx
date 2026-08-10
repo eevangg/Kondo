@@ -458,17 +458,6 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      {/* Executive Dashboard Header */}
-      <DashboardHeader
-        roommates={roommates}
-        bills={bills}
-        expenses={expenses}
-        settlements={settlements}
-        pantryItems={pantryItems}
-        maintenanceIssues={maintenanceIssues}
-        onOpenModal={(type) => setActiveModal(type)}
-      />
-
       {/* Main Tab Navigation Bar */}
       <div className="glass-card" style={{ padding: '0.5rem', marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
         <button
@@ -476,7 +465,7 @@ export default function App() {
           onClick={() => setActiveTab('overview')}
           style={{ flex: 1, minWidth: '130px' }}
         >
-          <LayoutDashboard size={16} /> Overview
+          <LayoutDashboard size={16} /> Home Overview
         </button>
         <button
           className={`btn ${activeTab === 'events' ? 'btn-primary' : 'btn-secondary'}`}
@@ -514,6 +503,19 @@ export default function App() {
           <Wrench size={16} /> Repairs
         </button>
       </div>
+
+      {/* Executive Dashboard Summary Header Cards (ONLY shown on Home Overview tab) */}
+      {activeTab === 'overview' && (
+        <DashboardHeader
+          roommates={roommates}
+          bills={bills}
+          expenses={expenses}
+          settlements={settlements}
+          pantryItems={pantryItems}
+          maintenanceIssues={maintenanceIssues}
+          onOpenModal={(type) => setActiveModal(type)}
+        />
+      )}
 
       {/* Tab Content Display */}
       {activeTab === 'overview' && (
