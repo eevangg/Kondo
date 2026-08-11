@@ -80,6 +80,8 @@ export default function PinSecurityModal({ isOpen, onClose, targetRoommate, onSu
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <input
             type="password"
+            inputMode="numeric"
+            pattern="[0-9]*"
             maxLength={6}
             autoFocus
             className="glass-input"
