@@ -92,12 +92,12 @@ export default function Navbar({
             }}
             title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
           >
-            <div className={`theme-slider-icon-bg ${theme === 'light' ? 'active' : ''}`}>
-              <Sun size={12} color={theme === 'light' ? '#f59e0b' : 'var(--text-muted)'} />
+            <div className={`theme-slider-icon-bg ${theme === 'light' ? 'hidden' : ''}`}>
+              <Sun size={12} color="#ffffff" />
             </div>
 
-            <div className={`theme-slider-icon-bg ${theme === 'dark' ? 'active' : ''}`}>
-              <Moon size={12} color={theme === 'dark' ? '#c084fc' : 'var(--text-muted)'} />
+            <div className={`theme-slider-icon-bg ${theme === 'dark' ? 'hidden' : ''}`}>
+              <Moon size={12} color="#ffffff" />
             </div>
 
             <div className="theme-slider-thumb">
