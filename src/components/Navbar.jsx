@@ -77,15 +77,37 @@ export default function Navbar({
             )}
           </button>
 
-          {/* Light / Dark Mode Toggle */}
-          <button
-            onClick={onToggleTheme}
-            className="btn btn-secondary btn-sm"
-            style={{ padding: '0.4rem', borderRadius: '50%', width: '36px', height: '36px' }}
+          {/* Light / Dark Mode Toggle Slider Switch */}
+          <div
+            onClick={() => onToggleTheme()}
+            className="theme-slider-track"
+            role="switch"
+            aria-checked={theme === 'dark'}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onToggleTheme();
+              }
+            }}
             title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
           >
-            {theme === 'dark' ? <Sun size={17} color="#f59e0b" /> : <Moon size={17} color="#6366f1" />}
-          </button>
+            <div className={`theme-slider-icon-bg ${theme === 'light' ? 'active' : ''}`}>
+              <Sun size={12} color={theme === 'light' ? '#f59e0b' : 'var(--text-muted)'} />
+            </div>
+
+            <div className={`theme-slider-icon-bg ${theme === 'dark' ? 'active' : ''}`}>
+              <Moon size={12} color={theme === 'dark' ? '#c084fc' : 'var(--text-muted)'} />
+            </div>
+
+            <div className="theme-slider-thumb">
+              {theme === 'dark' ? (
+                <Moon size={13} color="#ffffff" className="theme-knob-icon-moon" />
+              ) : (
+                <Sun size={13} color="#ffffff" className="theme-knob-icon-sun" />
+              )}
+            </div>
+          </div>
 
           {/* Security Settings Button */}
           <button

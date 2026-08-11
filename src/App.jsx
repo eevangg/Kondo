@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import Navbar from './components/Navbar';
 import DashboardHeader from './components/DashboardHeader';
 import ToastNotification from './components/ToastNotification';
@@ -65,14 +66,33 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const handleShowToast = (toastObj) => setToast(toastObj);
 
-  // Light / Dark Theme State
-  const [theme, setTheme] = useState(() => localStorage.getItem('homesync_theme') || 'dark');
+  // Light / Dark Theme State with Ultra-Smooth View Transitions
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('homesync_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    return savedTheme;
+  });
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('homesync_theme', theme);
   }, [theme]);
 
-  const handleToggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  const handleToggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+
+    if (document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.startViewTransition(() => {
+        flushSync(() => {
+          document.documentElement.setAttribute('data-theme', nextTheme);
+          setTheme(nextTheme);
+        });
+      });
+    } else {
+      document.documentElement.setAttribute('data-theme', nextTheme);
+      setTheme(nextTheme);
+    }
+  };
   const [isPresenceModalOpen, setIsPresenceModalOpen] = useState(false);
 
   // Fetch All Initial Data from Supabase Database
@@ -593,83 +613,85 @@ export default function App() {
         />
       )}
 
-      {/* Tab Content Display */}
-      {activeTab === 'overview' && (
-        <OverviewTab
-          roommates={roommates}
-          activeRoommateId={activeRoommateId}
-          presenceState={presenceState}
-          bills={bills}
-          expenses={expenses}
-          pantryItems={pantryItems}
-          cleaningTasks={cleaningTasks}
-          maintenanceIssues={maintenanceIssues}
-          onSwitchTab={setActiveTab}
-          onOpenModal={(type) => setActiveModal(type)}
-          onToggleBillPaid={handleToggleBillPaid}
-          onToggleTaskCleaned={handleToggleTaskCleaned}
-        />
-      )}
+      {/* Tab Content Display with Smooth Transitions */}
+      <div className="tab-pane-content" key={activeTab}>
+        {activeTab === 'overview' && (
+          <OverviewTab
+            roommates={roommates}
+            activeRoommateId={activeRoommateId}
+            presenceState={presenceState}
+            bills={bills}
+            expenses={expenses}
+            pantryItems={pantryItems}
+            cleaningTasks={cleaningTasks}
+            maintenanceIssues={maintenanceIssues}
+            onSwitchTab={setActiveTab}
+            onOpenModal={(type) => setActiveModal(type)}
+            onToggleBillPaid={handleToggleBillPaid}
+            onToggleTaskCleaned={handleToggleTaskCleaned}
+          />
+        )}
 
-      {activeTab === 'events' && (
-        <EventsTab
-          roommates={roommates}
-          events={events}
-          onOpenModal={(type) => setActiveModal(type)}
-          onDeleteEvent={handleDeleteEvent}
-          onShowToast={handleShowToast}
-        />
-      )}
+        {activeTab === 'events' && (
+          <EventsTab
+            roommates={roommates}
+            events={events}
+            onOpenModal={(type) => setActiveModal(type)}
+            onDeleteEvent={handleDeleteEvent}
+            onShowToast={handleShowToast}
+          />
+        )}
 
-      {activeTab === 'expenses' && (
-        <ExpensesBillsTab
-          roommates={roommates}
-          activeRoommateId={activeRoommateId}
-          bills={bills}
-          expenses={expenses}
-          settlements={settlements}
-          onOpenModal={(type) => setActiveModal(type)}
-          onToggleBillPaid={handleToggleBillPaid}
-          onDeleteExpense={handleDeleteExpense}
-          onDeleteBill={handleDeleteBill}
-        />
-      )}
+        {activeTab === 'expenses' && (
+          <ExpensesBillsTab
+            roommates={roommates}
+            activeRoommateId={activeRoommateId}
+            bills={bills}
+            expenses={expenses}
+            settlements={settlements}
+            onOpenModal={(type) => setActiveModal(type)}
+            onToggleBillPaid={handleToggleBillPaid}
+            onDeleteExpense={handleDeleteExpense}
+            onDeleteBill={handleDeleteBill}
+          />
+        )}
 
-      {activeTab === 'pantry' && (
-        <PantryShoppingTab
-          pantryItems={pantryItems}
-          shoppingItems={shoppingItems}
-          onOpenModal={(type) => setActiveModal(type)}
-          onUpdatePantryStock={handleUpdatePantryStock}
-          onToggleShoppingCompleted={handleToggleShoppingCompleted}
-          onRestockFromShopping={handleRestockFromShopping}
-          onDeletePantryItem={handleDeletePantryItem}
-          onDeleteShoppingItem={handleDeleteShoppingItem}
-        />
-      )}
+        {activeTab === 'pantry' && (
+          <PantryShoppingTab
+            pantryItems={pantryItems}
+            shoppingItems={shoppingItems}
+            onOpenModal={(type) => setActiveModal(type)}
+            onUpdatePantryStock={handleUpdatePantryStock}
+            onToggleShoppingCompleted={handleToggleShoppingCompleted}
+            onRestockFromShopping={handleRestockFromShopping}
+            onDeletePantryItem={handleDeletePantryItem}
+            onDeleteShoppingItem={handleDeleteShoppingItem}
+          />
+        )}
 
-      {activeTab === 'cleaning' && (
-        <CleaningTab
-          roommates={roommates}
-          dailyRoutine={dailyRoutine}
-          cleaningTasks={cleaningTasks}
-          onToggleDailyItem={handleToggleDailyItem}
-          onOpenModal={(type) => setActiveModal(type)}
-          onToggleTaskCleaned={handleToggleTaskCleaned}
-          onDeleteCleaningTask={handleDeleteCleaningTask}
-          onShowToast={handleShowToast}
-        />
-      )}
+        {activeTab === 'cleaning' && (
+          <CleaningTab
+            roommates={roommates}
+            dailyRoutine={dailyRoutine}
+            cleaningTasks={cleaningTasks}
+            onToggleDailyItem={handleToggleDailyItem}
+            onOpenModal={(type) => setActiveModal(type)}
+            onToggleTaskCleaned={handleToggleTaskCleaned}
+            onDeleteCleaningTask={handleDeleteCleaningTask}
+            onShowToast={handleShowToast}
+          />
+        )}
 
-      {activeTab === 'maintenance' && (
-        <MaintenanceTab
-          roommates={roommates}
-          maintenanceIssues={maintenanceIssues}
-          onOpenModal={(type) => setActiveModal(type)}
-          onUpdateMaintenanceStatus={handleUpdateMaintenanceStatus}
-          onDeleteMaintenanceIssue={handleDeleteMaintenanceIssue}
-        />
-      )}
+        {activeTab === 'maintenance' && (
+          <MaintenanceTab
+            roommates={roommates}
+            maintenanceIssues={maintenanceIssues}
+            onOpenModal={(type) => setActiveModal(type)}
+            onUpdateMaintenanceStatus={handleUpdateMaintenanceStatus}
+            onDeleteMaintenanceIssue={handleDeleteMaintenanceIssue}
+          />
+        )}
+      </div>
 
       {/* Dialog Modals */}
       <SettingsModal
