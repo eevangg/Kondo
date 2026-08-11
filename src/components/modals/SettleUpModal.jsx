@@ -119,7 +119,10 @@ export default function SettleUpModal({ isOpen, onClose, roommates, expenses, se
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>Settlement Amount ({CURRENCY_SYMBOL})</label>
             <input
               type="number"
+              inputMode="decimal"
+              pattern="[0-9]*[.,]?[0-9]*"
               step="0.01"
+              min="0"
               className="glass-input"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}

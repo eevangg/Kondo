@@ -63,7 +63,10 @@ export default function AddBillModal({ isOpen, onClose, roommates, activeRoommat
               <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.35rem' }}>Amount ($)</label>
               <input
                 type="number"
+                inputMode="decimal"
+                pattern="[0-9]*[.,]?[0-9]*"
                 step="0.01"
+                min="0"
                 className="glass-input"
                 placeholder="0.00"
                 value={amount}
