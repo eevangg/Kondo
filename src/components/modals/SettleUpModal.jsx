@@ -4,8 +4,8 @@ import confetti from 'canvas-confetti';
 import { CURRENCY_SYMBOL } from '../../lib/defaultData';
 
 export default function SettleUpModal({ isOpen, onClose, roommates, expenses, settlements, onSettleUp }) {
-  const r1 = roommates[0] || { id: 'r1', name: 'Andre' };
-  const r2 = roommates[1] || { id: 'r2', name: 'Gerard' };
+  const r1 = roommates[0] || { id: 'r1', name: 'Roommate 1' };
+  const r2 = roommates[1] || { id: 'r2', name: 'Roommate 2' };
 
   let r1PaidTotal = 0;
   let r2PaidTotal = 0;

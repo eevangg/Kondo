@@ -31,25 +31,23 @@ export default function Navbar({
         {/* Brand Logo & Title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <img
-            src="/homesync_logo.jpg"
-            alt="HomeSync Logo"
+            src="/favicon.svg"
+            alt="Kondo Logo"
             style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
-              objectFit: 'cover',
-              boxShadow: '0 0 15px rgba(6, 182, 212, 0.35)',
-              border: '1px solid var(--border-glass)',
+              width: '44px',
+              height: '44px',
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 0 15px rgba(6, 182, 212, 0.4))',
               flexShrink: 0
             }}
           />
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
               <h1 style={{ fontSize: '1.35rem', fontWeight: 800, background: 'linear-gradient(90deg, #6366f1, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: 1.2 }}>
-                HomeSync
+                Kondo
               </h1>
               <span className="badge badge-purple" style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem' }}>
-                <Sparkles size={11} /> Roommate OS
+                <Sparkles size={11} /> Condo OS
               </span>
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>

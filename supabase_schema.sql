@@ -1,4 +1,4 @@
--- HomeSync Supabase Schema Migration (Updated with Live Condo Data & Open Access)
+-- Kondo Supabase Schema Migration (Portfolio Ready & Sanitized)
 -- Copy & Run this SQL in your Supabase SQL Editor (https://app.supabase.com/project/_/sql)
 
 -- 1. Roommates Table
@@ -12,11 +12,11 @@ CREATE TABLE IF NOT EXISTS roommates (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Seed Initial Roommates (Andre & Gerard)
+-- Seed Initial Sample Roommates
 INSERT INTO roommates (id, name, avatar_color, initials, pin, telegram_handle)
 VALUES 
-  ('r1', 'Andre', '#6366f1', 'AN', '123456', '@eevangg'),
-  ('r2', 'Gerard', '#06b6d4', 'GR', '567890', '@gerardmolinaa')
+  ('r1', 'Roommate 1', '#6366f1', 'R1', '123456', '@roommate1'),
+  ('r2', 'Roommate 2', '#06b6d4', 'R2', '567890', '@roommate2')
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,
   telegram_handle = EXCLUDED.telegram_handle;
@@ -37,14 +37,14 @@ CREATE TABLE IF NOT EXISTS bills (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Clear old dummy bills & seed live bills
+-- Clear old dummy bills & seed sample bills
 DELETE FROM bills;
 INSERT INTO bills (id, title, amount, due_date, category, paid_by, is_paid, is_recurring, recurrence_interval, status, remarks)
 VALUES
-  ('b1', 'Monthly Rent', 16000.00, '2026-09-01', 'Monthly Dues', NULL, FALSE, TRUE, 'Monthly', 'Due', 'Monthly condo rent (Due 1st of month)'),
+  ('b1', 'Monthly Rent', 15000.00, '2026-09-01', 'Monthly Dues', NULL, FALSE, TRUE, 'Monthly', 'Due', 'Monthly condo rent (Due 1st of month)'),
   ('b2', 'Converge Internet', 1500.00, '2026-09-01', 'Utilities', NULL, FALSE, TRUE, 'Monthly', 'Due', 'Converge internet bill (Due 1st of month)'),
-  ('b3', 'Electricity (Meralco - June & July)', 10522.63, '2026-07-27', 'Utilities', 'r1', FALSE, TRUE, 'Monthly', 'Overdue', 'Meralco electric bill (Due 27th of month - Overdue)'),
-  ('b4', 'Association Dues + Water', 2562.80, '2026-08-30', 'Monthly Dues', 'r1', FALSE, TRUE, 'Monthly', 'Due', 'Building dues & water utility (Due 30th of month)');
+  ('b3', 'Electricity (Meralco)', 5000.00, '2026-08-27', 'Utilities', 'r1', FALSE, TRUE, 'Monthly', 'Due', 'Meralco electric bill (Due 27th of month)'),
+  ('b4', 'Association Dues + Water', 2500.00, '2026-08-30', 'Monthly Dues', 'r1', FALSE, TRUE, 'Monthly', 'Due', 'Building dues & water utility (Due 30th of month)');
 
 -- 3. Shared Expenses Table
 CREATE TABLE IF NOT EXISTS expenses (
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS cleaning_tasks (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Clear old dummy cleaning tasks & seed live task
+-- Clear old dummy cleaning tasks & seed sample task
 DELETE FROM cleaning_tasks;
 INSERT INTO cleaning_tasks (id, task_name, area, interval_days, last_cleaned_at, last_cleaned_by, streak)
 VALUES
@@ -134,11 +134,11 @@ CREATE TABLE IF NOT EXISTS maintenance_issues (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Clear old dummy maintenance & seed live repair
+-- Clear old dummy maintenance & seed sample repair
 DELETE FROM maintenance_issues;
 INSERT INTO maintenance_issues (id, title, description, location, priority, status, reported_by, assigned_to)
 VALUES
-  ('m1', 'Broken Kitchen Sink', 'Kitchen sink leak repair.', 'Kitchen', 'High', 'Done', 'r1', 'r1');
+  ('m1', 'Kitchen Sink Repair', 'Kitchen sink leak repair.', 'Kitchen', 'High', 'Done', 'r1', 'r1');
 
 -- 10. Condo Presence Status Table
 CREATE TABLE IF NOT EXISTS presence (
@@ -167,6 +167,6 @@ ALTER TABLE cleaning_tasks DISABLE ROW LEVEL SECURITY;
 ALTER TABLE maintenance_issues DISABLE ROW LEVEL SECURITY;
 ALTER TABLE presence DISABLE ROW LEVEL SECURITY;
 
--- Enable Supabase Realtime Broadcasting for all HomeSync tables
+-- Enable Supabase Realtime Broadcasting for all Kondo tables
 DROP PUBLICATION IF EXISTS supabase_realtime;
 CREATE PUBLICATION supabase_realtime FOR TABLE roommates, bills, expenses, settlements, events, pantry_items, shopping_items, cleaning_tasks, maintenance_issues, presence;

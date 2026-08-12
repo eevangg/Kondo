@@ -1,8 +1,8 @@
 export const CURRENCY_SYMBOL = '₱';
 
 export const INITIAL_ROOMMATES = [
-  { id: 'r1', name: 'Andre', avatar_color: '#6366f1', initials: 'AN', pin: '123456', telegram_handle: '@eevangg' },
-  { id: 'r2', name: 'Gerard', avatar_color: '#06b6d4', initials: 'GR', pin: '567890', telegram_handle: '@gerardmolinaa' }
+  { id: 'r1', name: 'Roommate 1', avatar_color: '#6366f1', initials: 'R1', pin: '123456', telegram_handle: '@roommate1' },
+  { id: 'r2', name: 'Roommate 2', avatar_color: '#06b6d4', initials: 'R2', pin: '567890', telegram_handle: '@roommate2' }
 ];
 
 export const INITIAL_EVENTS = [];

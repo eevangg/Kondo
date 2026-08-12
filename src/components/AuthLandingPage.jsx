@@ -67,23 +67,21 @@ export default function AuthLandingPage({ roommates, onLoginSuccess }) {
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
           <div style={{ display: 'inline-block', marginBottom: '0.75rem' }}>
             <img
-              src="/homesync_logo.jpg"
-              alt="HomeSync Logo"
+              src="/favicon.svg"
+              alt="Kondo Logo"
               style={{
                 width: '64px',
                 height: '64px',
-                borderRadius: '16px',
-                objectFit: 'cover',
-                boxShadow: '0 0 25px rgba(6, 182, 212, 0.4)',
-                border: '1px solid var(--border-glass)'
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 0 20px rgba(6, 182, 212, 0.5))'
               }}
             />
           </div>
           <h1 style={{ fontSize: '1.6rem', fontWeight: 800, background: 'linear-gradient(90deg, #6366f1, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            HomeSync
+            Kondo
           </h1>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Roommate OS Security Portal
+            Condo OS Security Portal
           </p>
         </div>
 

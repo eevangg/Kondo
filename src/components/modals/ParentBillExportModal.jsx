@@ -12,19 +12,19 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
 
   if (!isOpen) return null;
 
-  const r1 = roommates[0] || { name: 'Andre' };
-  const r2 = roommates[1] || { name: 'Gerard' };
+  const r1 = roommates[0] || { name: 'Roommate 1' };
+  const r2 = roommates[1] || { name: 'Roommate 2' };
 
   const monthlyDuesBills = bills.filter((b) => b.category === 'Monthly Dues' || b.title.toLowerCase().includes('rent') || b.title.toLowerCase().includes('association'));
   const utilityBills = bills.filter((b) => b.category === 'Utilities' || b.title.toLowerCase().includes('electric') || b.title.toLowerCase().includes('internet'));
 
   const duesTotal = monthlyDuesBills.reduce((sum, b) => sum + Number(b.amount || 0), 0);
-  const duesGerard = duesTotal / 2;
+  const duesShare = duesTotal / 2;
 
   const utilitiesTotal = utilityBills.reduce((sum, b) => sum + Number(b.amount || 0), 0);
-  const utilitiesGerard = utilitiesTotal / 2;
+  const utilitiesShare = utilitiesTotal / 2;
 
-  const grandTotalGerard = duesGerard + utilitiesGerard;
+  const grandTotalShare = duesShare + utilitiesShare;
 
   const generateImageBlob = async () => {
     if (!tableRef.current) return null;
@@ -44,7 +44,7 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
     try {
       const blob = await generateImageBlob();
       if (blob) {
-        const caption = `📋 *HOUSEHOLD BILLS STATEMENT*\nGrand Total (${r2.name}'s Share): *${CURRENCY_SYMBOL}${grandTotalGerard.toLocaleString('en-US', { minimumFractionDigits: 2 })}*`;
+        const caption = `📋 *HOUSEHOLD BILLS STATEMENT*\nGrand Total (${r2.name}'s Share): *${CURRENCY_SYMBOL}${grandTotalShare.toLocaleString('en-US', { minimumFractionDigits: 2 })}*`;
         const result = await sendTelegramPhoto(blob, caption);
         
         if (onShowToast) {
@@ -71,7 +71,7 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `HomeSync_Billing_Statement_${new Date().toISOString().split('T')[0]}.png`;
+        a.download = `Kondo_Billing_Statement_${new Date().toISOString().split('T')[0]}.png`;
         a.click();
         URL.revokeObjectURL(url);
         if (onShowToast) onShowToast({ type: 'success', message: 'Billing statement PNG downloaded!' });
@@ -109,7 +109,7 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
         >
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #000', paddingBottom: '0.5rem', marginBottom: '0.75rem' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', margin: 0 }}>HomeSync Household Bills Statement</h3>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', margin: 0 }}>Kondo Household Bills Statement</h3>
             <span style={{ fontSize: '0.8rem', color: '#4b5563' }}>Date: {new Date().toLocaleDateString()}</span>
           </div>
 
@@ -139,7 +139,7 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
               <tr style={{ fontWeight: 'bold', fontStyle: 'italic' }}>
                 <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>Subtotal</td>
                 <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{duesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{duesGerard.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{duesShare.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td style={{ padding: '6px 12px', border: '1px solid #ccc' }}></td>
               </tr>
 
@@ -158,7 +158,7 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
               <tr style={{ fontWeight: 'bold', fontStyle: 'italic' }}>
                 <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>Subtotal</td>
                 <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{utilitiesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{utilitiesGerard.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td style={{ padding: '6px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{utilitiesShare.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td style={{ padding: '6px 12px', border: '1px solid #ccc' }}></td>
               </tr>
 
@@ -174,7 +174,7 @@ export default function ParentBillExportModal({ isOpen, onClose, bills, expenses
               <tr style={{ background: '#15803d', color: '#ffffff', fontWeight: 'bold', fontSize: '1.05rem' }}>
                 <td style={{ padding: '8px 12px', border: '1px solid #ccc' }}>GRAND TOTAL</td>
                 <td style={{ padding: '8px 12px', border: '1px solid #ccc' }}></td>
-                <td style={{ padding: '8px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{grandTotalGerard.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #ccc', textAlign: 'right' }}>{CURRENCY_SYMBOL}{grandTotalShare.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td style={{ padding: '8px 12px', border: '1px solid #ccc' }}></td>
               </tr>
 
