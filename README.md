@@ -83,10 +83,4 @@ npm run dev
 
 1. Open the deployed web app on iOS Safari or Android Chrome.
 2. Tap **Share** (iOS) or **Options** (Android).
-3. Select **Add to Home Screen** to install as a standalone native-feeling web application.
-
----
-
-## 📄 License
-
-Distributed under the [MIT License](LICENSE).
+3. Select **Add to Home Screen** to install as a standalone, native-feeling web application.
