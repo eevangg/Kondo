@@ -344,8 +344,8 @@ export default function App() {
         await supabase.from('bill_payments').insert(paymentLog);
       }
 
-      // Telegram notification with exact requested message format
-      const telegramMsg = `PAID ON ${dateTimeStr}\n${targetBill.title} - P${formattedAmount}`;
+      // Telegram notification with statement log header & formatting
+      const telegramMsg = `📋 *HOUSEHOLD BILL PAYMENT*\nPAID ON ${dateTimeStr}\n*${targetBill.title}* - *${CURRENCY_SYMBOL}${formattedAmount}*`;
       await sendTelegramMessage(telegramMsg);
     }
 
