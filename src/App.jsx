@@ -346,19 +346,31 @@ export default function App() {
 
       // Telegram notification with statement log header & formatting
       const telegramMsg = `📋 *HOUSEHOLD BILL PAYMENT*\nPAID ON ${dateTimeStr}\n*${targetBill.title}* - *${CURRENCY_SYMBOL}${formattedAmount}*`;
-      await sendTelegramMessage(telegramMsg);
+      const teleResult = await sendTelegramMessage(telegramMsg);
+
+      setBills((prev) => prev.map((b) => (b.id === id ? updatedBill : b)));
+
+      if (isSupabaseConnected && supabase) {
+        await supabase.from('bills').update(updatedBill).eq('id', id);
+      }
+
+      const renewalNote = targetBill.is_recurring ? ' Cycle renewed for next month.' : '';
+      if (teleResult && teleResult.success) {
+        handleShowToast({ type: 'success', message: `Bill paid & sent to Telegram!${renewalNote}` });
+      } else if (teleResult && teleResult.error && teleResult.error.includes('configured')) {
+        handleShowToast({ type: 'warning', message: `Bill paid!${renewalNote} Configure Telegram in Settings for chat alerts.` });
+      } else {
+        handleShowToast({ type: 'success', message: `Bill paid & logged!${renewalNote}` });
+      }
+    } else {
+      setBills((prev) => prev.map((b) => (b.id === id ? updatedBill : b)));
+
+      if (isSupabaseConnected && supabase) {
+        await supabase.from('bills').update(updatedBill).eq('id', id);
+      }
+
+      handleShowToast({ type: 'success', message: 'Bill status updated.' });
     }
-
-    setBills((prev) => prev.map((b) => (b.id === id ? updatedBill : b)));
-
-    if (isSupabaseConnected && supabase) {
-      await supabase.from('bills').update(updatedBill).eq('id', id);
-    }
-
-    handleShowToast({
-      type: 'success',
-      message: isPaid ? 'Bill paid & payment logged! Cycle renewed.' : 'Bill status updated.'
-    });
   };
 
   const handleUpdateBill = async (updatedBill) => {

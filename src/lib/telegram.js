@@ -18,7 +18,7 @@ export async function sendTelegramMessage(text) {
   }
 
   try {
-    const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    let response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -28,7 +28,20 @@ export async function sendTelegramMessage(text) {
       })
     });
 
-    const data = await response.json();
+    let data = await response.json();
+
+    // Fallback retry without Markdown parse_mode if Telegram rejects formatting entities
+    if (!data.ok && data.description && (data.description.includes('parse') || data.description.includes('entity'))) {
+      response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: text
+        })
+      });
+      data = await response.json();
+    }
 
     if (data.ok) {
       return { success: true, message: '🚀 Sent to Telegram group chat!' };
