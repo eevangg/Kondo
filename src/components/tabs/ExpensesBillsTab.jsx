@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { DollarSign, Calendar, Plus, CheckCircle2, ArrowUpRight, Receipt, Repeat, UserCheck, Trash2 } from 'lucide-react';
+import { DollarSign, Calendar, Plus, CheckCircle2, ArrowUpRight, Receipt, Repeat, Trash2, Pencil, History } from 'lucide-react';
 import { CURRENCY_SYMBOL } from '../../lib/defaultData';
 
 export default function ExpensesBillsTab({
   roommates,
   activeRoommateId,
-  bills,
-  expenses,
-  settlements,
+  bills = [],
+  billPayments = [],
+  expenses = [],
+  settlements = [],
   onOpenModal,
   onToggleBillPaid,
+  onEditBill,
   onDeleteExpense,
-  onDeleteBill
+  onDeleteBill,
+  onDeleteBillPayment
 }) {
   const [subTab, setSubTab] = useState('expenses');
 
@@ -96,7 +99,14 @@ export default function ExpensesBillsTab({
           onClick={() => setSubTab('bills')}
           style={{ whiteSpace: 'nowrap' }}
         >
-          <Calendar size={14} /> Recurring & Utility Bills ({bills.length})
+          <Calendar size={14} /> Recurring Bills ({bills.length})
+        </button>
+        <button
+          className={`btn btn-sm ${subTab === 'payments' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setSubTab('payments')}
+          style={{ whiteSpace: 'nowrap' }}
+        >
+          <History size={14} /> Bill Payment Log ({billPayments.length})
         </button>
         <button
           className={`btn btn-sm ${subTab === 'settlements' ? 'btn-primary' : 'btn-secondary'}`}
@@ -184,60 +194,147 @@ export default function ExpensesBillsTab({
             </button>
           </div>
 
-          <div className="grid-cols-2">
-            {bills.map((bill) => {
-              const payer = roommates.find((r) => r.id === bill.paid_by);
+          {bills.length === 0 ? (
+            <div className="glass-card" style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <Calendar size={40} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
+              <p>No bills configured yet.</p>
+            </div>
+          ) : (
+            <div className="grid-cols-2">
+              {bills.map((bill) => {
+                const payer = roommates.find((r) => r.id === bill.paid_by);
 
-              return (
-                <div key={bill.id} className="glass-card" style={{ padding: '1.25rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                    <div>
-                      <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)' }}>{bill.title}</h4>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Due Date: {bill.due_date}</span>
-                    </div>
-                    <span className={`badge ${bill.is_paid ? 'badge-success' : 'badge-warning'}`}>
-                      {bill.is_paid ? 'Paid' : 'Unpaid'}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                      {CURRENCY_SYMBOL}{Number(bill.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </span>
-                    {bill.is_recurring && (
-                      <span style={{ fontSize: '0.75rem', color: 'var(--accent-secondary)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                        <Repeat size={12} /> {bill.recurrence_interval}
+                return (
+                  <div key={bill.id} className="glass-card" style={{ padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                      <div>
+                        <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)' }}>{bill.title}</h4>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Due Date: {bill.due_date}</span>
+                      </div>
+                      <span className={`badge ${bill.is_paid ? 'badge-success' : 'badge-warning'}`}>
+                        {bill.is_paid ? 'Paid' : 'Unpaid'}
                       </span>
-                    )}
-                  </div>
+                    </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid var(--border-glass)' }}>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                      Payer: <strong style={{ color: payer ? payer.avatar_color : 'var(--text-main)' }}>{payer ? payer.name : 'Unassigned'}</strong>
-                    </span>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button
-                        onClick={() => onToggleBillPaid(bill.id, !bill.is_paid)}
-                        className={`btn btn-sm ${bill.is_paid ? 'btn-secondary' : 'btn-primary'}`}
-                      >
-                        {bill.is_paid ? 'Mark Unpaid' : 'Mark Paid'}
-                      </button>
-                      <button
-                        onClick={() => onDeleteBill(bill.id)}
-                        style={{ background: 'none', border: 'none', color: 'var(--status-danger)', cursor: 'pointer' }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                        {CURRENCY_SYMBOL}{Number(bill.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </span>
+                      {bill.is_recurring && (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--accent-secondary)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                          <Repeat size={12} /> {bill.recurrence_interval || 'Monthly'}
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid var(--border-glass)' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        Payer: <strong style={{ color: payer ? payer.avatar_color : 'var(--text-main)' }}>{payer ? payer.name : 'Unassigned'}</strong>
+                      </span>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <button
+                          onClick={() => onEditBill && onEditBill(bill)}
+                          className="btn btn-secondary btn-sm"
+                          style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem' }}
+                          title="Edit Bill Details"
+                        >
+                          <Pencil size={14} /> Edit
+                        </button>
+                        <button
+                          onClick={() => onToggleBillPaid(bill.id, !bill.is_paid)}
+                          className={`btn btn-sm ${bill.is_paid ? 'btn-secondary' : 'btn-primary'}`}
+                          style={{ padding: '0.25rem 0.6rem', fontSize: '0.8rem' }}
+                        >
+                          {bill.is_paid ? 'Mark Unpaid' : 'Mark Paid'}
+                        </button>
+                        <button
+                          onClick={() => onDeleteBill(bill.id)}
+                          style={{ background: 'none', border: 'none', color: 'var(--status-danger)', cursor: 'pointer', padding: '0.25rem' }}
+                          title="Delete Bill"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
-      {/* SUB TAB 3: Settlement Log */}
+      {/* SUB TAB 3: Bill Payment Log */}
+      {subTab === 'payments' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Bill Payment Log & History</h3>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Logged automatically whenever a bill is marked as paid
+            </span>
+          </div>
+
+          {billPayments.length === 0 ? (
+            <div className="glass-card" style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <History size={40} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
+              <p>No bill payment history logged yet.</p>
+              <p style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>Mark any bill as paid in the "Recurring Bills" tab to create a log entry.</p>
+            </div>
+          ) : (
+            <div className="glass-card" style={{ padding: '0.75rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-glass)', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                    <th style={{ padding: '0.75rem' }}>Date Paid</th>
+                    <th style={{ padding: '0.75rem' }}>Bill Title</th>
+                    <th style={{ padding: '0.75rem' }}>Category</th>
+                    <th style={{ padding: '0.75rem' }}>Paid By</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'right' }}>Amount Paid</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'right' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {billPayments.map((bp) => {
+                    const payer = roommates.find((r) => r.id === bp.paid_by) || { name: 'Roommate', avatar_color: 'var(--accent-secondary)' };
+                    const formattedDate = bp.paid_at ? new Date(bp.paid_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : (bp.due_date || 'N/A');
+
+                    return (
+                      <tr key={bp.id} style={{ borderBottom: '1px solid var(--border-glass)' }}>
+                        <td style={{ padding: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: '0.82rem' }}>
+                          {formattedDate}
+                        </td>
+                        <td style={{ padding: '0.75rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                          {bp.bill_title}
+                        </td>
+                        <td style={{ padding: '0.75rem', whiteSpace: 'nowrap' }}>
+                          <span className="badge badge-purple">{bp.category || 'Utility'}</span>
+                        </td>
+                        <td style={{ padding: '0.75rem', fontWeight: 600, color: payer.avatar_color, whiteSpace: 'nowrap' }}>
+                          {payer.name}
+                        </td>
+                        <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 800, color: 'var(--status-success)', whiteSpace: 'nowrap' }}>
+                          {CURRENCY_SYMBOL}{Number(bp.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                          <button
+                            onClick={() => onDeleteBillPayment && onDeleteBillPayment(bp.id)}
+                            style={{ background: 'none', border: 'none', color: 'var(--status-danger)', cursor: 'pointer' }}
+                            title="Delete Payment Log Entry"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* SUB TAB 4: Settlement Log */}
       {subTab === 'settlements' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Settlement History Log</h3>

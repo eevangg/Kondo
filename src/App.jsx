@@ -15,6 +15,7 @@ import EventsTab from './components/tabs/EventsTab';
 
 import AddExpenseModal from './components/modals/AddExpenseModal';
 import AddBillModal from './components/modals/AddBillModal';
+import EditBillModal from './components/modals/EditBillModal';
 import AddPantryItemModal from './components/modals/AddPantryItemModal';
 import AddCleaningTaskModal from './components/modals/AddCleaningTaskModal';
 import AddMaintenanceModal from './components/modals/AddMaintenanceModal';
@@ -54,6 +55,8 @@ export default function App() {
     r2: { status: 'At Condo', return_time: null }
   });
   const [bills, setBills] = useState([]);
+  const [billPayments, setBillPayments] = useState([]);
+  const [editingBill, setEditingBill] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [settlements, setSettlements] = useState([]);
   const [pantryItems, setPantryItems] = useState([]);
@@ -110,6 +113,10 @@ export default function App() {
       const { data: bData, error: bErr } = await supabase.from('bills').select('*').order('created_at', { ascending: false });
       if (bErr) console.error('Supabase fetch error (bills):', bErr);
       if (bData) setBills(bData);
+
+      const { data: bpData, error: bpErr } = await supabase.from('bill_payments').select('*').order('paid_at', { ascending: false });
+      if (bpErr) console.error('Supabase fetch error (bill_payments):', bpErr);
+      if (bpData) setBillPayments(bpData);
 
       const { data: eData, error: eErr } = await supabase.from('expenses').select('*').order('created_at', { ascending: false });
       if (eErr) console.error('Supabase fetch error (expenses):', eErr);
@@ -306,6 +313,42 @@ export default function App() {
       };
     }
 
+    // Log payment record and send Telegram notification when bill is paid
+    if (isPaid) {
+      const now = new Date();
+      const dateTimeStr = now.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+      const formattedAmount = Number(targetBill.amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+      const paymentLog = {
+        id: 'bp_' + Date.now(),
+        bill_id: targetBill.id,
+        bill_title: targetBill.title,
+        amount: targetBill.amount,
+        paid_by: targetBill.paid_by || activeRoommateId,
+        paid_at: now.toISOString(),
+        due_date: targetBill.due_date,
+        category: targetBill.category || 'Utilities',
+        remarks: targetBill.remarks || ''
+      };
+
+      setBillPayments((prev) => [paymentLog, ...prev]);
+
+      if (isSupabaseConnected && supabase) {
+        await supabase.from('bill_payments').insert(paymentLog);
+      }
+
+      // Telegram notification with exact requested message format
+      const telegramMsg = `PAID ON ${dateTimeStr}\n${targetBill.title} - P${formattedAmount}`;
+      await sendTelegramMessage(telegramMsg);
+    }
+
     setBills((prev) => prev.map((b) => (b.id === id ? updatedBill : b)));
 
     if (isSupabaseConnected && supabase) {
@@ -314,8 +357,28 @@ export default function App() {
 
     handleShowToast({
       type: 'success',
-      message: isPaid ? 'Bill paid! Cycle renewed for next month.' : 'Bill status updated.'
+      message: isPaid ? 'Bill paid & payment logged! Cycle renewed.' : 'Bill status updated.'
     });
+  };
+
+  const handleUpdateBill = async (updatedBill) => {
+    setBills((prev) => prev.map((b) => (b.id === updatedBill.id ? updatedBill : b)));
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('bills').update(updatedBill).eq('id', updatedBill.id);
+    }
+
+    handleShowToast({ type: 'success', message: 'Bill details updated!' });
+  };
+
+  const handleDeleteBillPayment = async (id) => {
+    setBillPayments((prev) => prev.filter((bp) => bp.id !== id));
+
+    if (isSupabaseConnected && supabase) {
+      await supabase.from('bill_payments').delete().eq('id', id);
+    }
+
+    handleShowToast({ type: 'success', message: 'Payment log record removed.' });
   };
 
   const handleDeleteBill = async (id) => {
@@ -647,12 +710,15 @@ export default function App() {
             roommates={roommates}
             activeRoommateId={activeRoommateId}
             bills={bills}
+            billPayments={billPayments}
             expenses={expenses}
             settlements={settlements}
             onOpenModal={(type) => setActiveModal(type)}
             onToggleBillPaid={handleToggleBillPaid}
+            onEditBill={(bill) => setEditingBill(bill)}
             onDeleteExpense={handleDeleteExpense}
             onDeleteBill={handleDeleteBill}
+            onDeleteBillPayment={handleDeleteBillPayment}
           />
         )}
 
@@ -741,6 +807,14 @@ export default function App() {
         roommates={roommates}
         activeRoommateId={activeRoommateId}
         onAddBill={handleAddBill}
+      />
+
+      <EditBillModal
+        isOpen={Boolean(editingBill)}
+        onClose={() => setEditingBill(null)}
+        bill={editingBill}
+        roommates={roommates}
+        onUpdateBill={handleUpdateBill}
       />
 
       <AddPantryItemModal

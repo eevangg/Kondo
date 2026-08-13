@@ -37,14 +37,14 @@ CREATE TABLE IF NOT EXISTS bills (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Clear old dummy bills & seed sample bills
-DELETE FROM bills;
+-- Seed sample bills non-destructively
 INSERT INTO bills (id, title, amount, due_date, category, paid_by, is_paid, is_recurring, recurrence_interval, status, remarks)
 VALUES
   ('b1', 'Monthly Rent', 15000.00, '2026-09-01', 'Monthly Dues', NULL, FALSE, TRUE, 'Monthly', 'Due', 'Monthly condo rent (Due 1st of month)'),
   ('b2', 'Converge Internet', 1500.00, '2026-09-01', 'Utilities', NULL, FALSE, TRUE, 'Monthly', 'Due', 'Converge internet bill (Due 1st of month)'),
   ('b3', 'Electricity (Meralco)', 5000.00, '2026-08-27', 'Utilities', 'r1', FALSE, TRUE, 'Monthly', 'Due', 'Meralco electric bill (Due 27th of month)'),
-  ('b4', 'Association Dues + Water', 2500.00, '2026-08-30', 'Monthly Dues', 'r1', FALSE, TRUE, 'Monthly', 'Due', 'Building dues & water utility (Due 30th of month)');
+  ('b4', 'Association Dues + Water', 2500.00, '2026-08-30', 'Monthly Dues', 'r1', FALSE, TRUE, 'Monthly', 'Due', 'Building dues & water utility (Due 30th of month)')
+ON CONFLICT (id) DO NOTHING;
 
 -- 3. Shared Expenses Table
 CREATE TABLE IF NOT EXISTS expenses (
@@ -115,11 +115,11 @@ CREATE TABLE IF NOT EXISTS cleaning_tasks (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Clear old dummy cleaning tasks & seed sample task
-DELETE FROM cleaning_tasks;
+-- Seed sample task non-destructively
 INSERT INTO cleaning_tasks (id, task_name, area, interval_days, last_cleaned_at, last_cleaned_by, streak)
 VALUES
-  ('c1', 'Deep Clean Bathroom', 'Bathroom', 7, '2026-08-05', 'r1', 1);
+  ('c1', 'Deep Clean Bathroom', 'Bathroom', 7, '2026-08-05', 'r1', 1)
+ON CONFLICT (id) DO NOTHING;
 
 -- 9. Maintenance & Repairs Queue Table
 CREATE TABLE IF NOT EXISTS maintenance_issues (
@@ -134,11 +134,11 @@ CREATE TABLE IF NOT EXISTS maintenance_issues (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Clear old dummy maintenance & seed sample repair
-DELETE FROM maintenance_issues;
+-- Seed sample repair non-destructively
 INSERT INTO maintenance_issues (id, title, description, location, priority, status, reported_by, assigned_to)
 VALUES
-  ('m1', 'Kitchen Sink Repair', 'Kitchen sink leak repair.', 'Kitchen', 'High', 'Done', 'r1', 'r1');
+  ('m1', 'Kitchen Sink Repair', 'Kitchen sink leak repair.', 'Kitchen', 'High', 'Done', 'r1', 'r1')
+ON CONFLICT (id) DO NOTHING;
 
 -- 10. Condo Presence Status Table
 CREATE TABLE IF NOT EXISTS presence (
@@ -155,6 +155,20 @@ VALUES
   ('r2', 'At Condo', NULL)
 ON CONFLICT (roommate_id) DO NOTHING;
 
+-- 11. Bill Payments History Table
+CREATE TABLE IF NOT EXISTS bill_payments (
+  id TEXT PRIMARY KEY,
+  bill_id TEXT,
+  bill_title TEXT NOT NULL,
+  amount NUMERIC(10, 2) NOT NULL,
+  paid_by TEXT REFERENCES roommates(id),
+  paid_at TIMESTAMPTZ DEFAULT NOW(),
+  due_date DATE,
+  category TEXT DEFAULT 'Utilities',
+  remarks TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Disable RLS on public tables to guarantee 100% open client access without policy restrictions
 ALTER TABLE roommates DISABLE ROW LEVEL SECURITY;
 ALTER TABLE bills DISABLE ROW LEVEL SECURITY;
@@ -166,7 +180,9 @@ ALTER TABLE shopping_items DISABLE ROW LEVEL SECURITY;
 ALTER TABLE cleaning_tasks DISABLE ROW LEVEL SECURITY;
 ALTER TABLE maintenance_issues DISABLE ROW LEVEL SECURITY;
 ALTER TABLE presence DISABLE ROW LEVEL SECURITY;
+ALTER TABLE bill_payments DISABLE ROW LEVEL SECURITY;
 
 -- Enable Supabase Realtime Broadcasting for all Kondo tables
 DROP PUBLICATION IF EXISTS supabase_realtime;
-CREATE PUBLICATION supabase_realtime FOR TABLE roommates, bills, expenses, settlements, events, pantry_items, shopping_items, cleaning_tasks, maintenance_issues, presence;
+CREATE PUBLICATION supabase_realtime FOR TABLE roommates, bills, expenses, settlements, events, pantry_items, shopping_items, cleaning_tasks, maintenance_issues, presence, bill_payments;
+
