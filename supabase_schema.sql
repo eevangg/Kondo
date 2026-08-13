@@ -12,14 +12,12 @@ CREATE TABLE IF NOT EXISTS roommates (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Seed Initial Sample Roommates
+-- Seed Initial Sample Roommates (DO NOTHING on conflict so existing custom names are never overwritten)
 INSERT INTO roommates (id, name, avatar_color, initials, pin, telegram_handle)
 VALUES 
   ('r1', 'Roommate 1', '#6366f1', 'R1', '123456', '@roommate1'),
   ('r2', 'Roommate 2', '#06b6d4', 'R2', '567890', '@roommate2')
-ON CONFLICT (id) DO UPDATE SET
-  name = EXCLUDED.name,
-  telegram_handle = EXCLUDED.telegram_handle;
+ON CONFLICT (id) DO NOTHING;
 
 -- 2. Bills Table (Rent & Utilities)
 CREATE TABLE IF NOT EXISTS bills (
